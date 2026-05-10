@@ -43,6 +43,15 @@ function validateQuestion(q: Question): { isValid: boolean; error?: string } {
   return { isValid: true };
 }
 
+interface Settings {
+  autoExp: boolean;
+  showOpt: boolean;
+  showAns: boolean;
+  showExp: boolean;
+}
+
+const DEFAULT_SETTINGS: Settings = { autoExp: false, showOpt: true, showAns: false, showExp: false };
+
 function renderMath(text: string) {
   if (!text) return "";
   let res = text.replace(/\$\$(.*?)\$\$/gs, (_, m) => katex.renderToString(m, { displayMode: true, throwOnError: false }));
@@ -52,15 +61,15 @@ function renderMath(text: string) {
   return res;
 }
 
-function EditableText({ text, onSave, className = "", isEditable = false, style = {} }: any) {
+function EditableText({ text, onSave, className = "", isEditable = false, style = {} }: { text: string; onSave: (v: string) => void; className?: string; isEditable?: boolean; style?: React.CSSProperties }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(text);
-  useEffect(() => setVal(text), [text]);
+
   if (isEditable && editing) return <textarea className="edit-input" value={val} onChange={e => setVal(e.target.value)} onBlur={() => { setEditing(false); onSave(val); }} autoFocus />;
-  return <div className={`${className} ${isEditable ? 'editable-field' : ''}`} style={style} onClick={() => isEditable && setEditing(true)} dangerouslySetInnerHTML={{ __html: renderMath(text) }} />;
+  return <div className={`${className} ${isEditable ? 'editable-field' : ''}`} style={style} onClick={() => { if (isEditable) { setEditing(true); setVal(text); } }} dangerouslySetInnerHTML={{ __html: renderMath(text) }} />;
 }
 
-function MultiSelectModal({ title, options, selected, onToggle, onClose, onSelectAll, onClear }: any) {
+function MultiSelectModal({ title, options, selected, onToggle, onClose, onSelectAll, onClear }: { title: string; options: string[]; selected: string[]; onToggle: (v: string) => void; onClose: () => void; onSelectAll: () => void; onClear: () => void }) {
   return (
     <div className="modal-overlay" style={{ display: 'flex', zIndex: 1200 }} onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
@@ -82,7 +91,7 @@ function MultiSelectModal({ title, options, selected, onToggle, onClose, onSelec
   );
 }
 
-function Sidebar({ isOpen, onClose, settings, onSettingChange }: any) {
+function Sidebar({ isOpen, onClose, settings, onSettingChange }: { isOpen: boolean; onClose: () => void; settings: Settings; onSettingChange: (key: keyof Settings, val: boolean) => void }) {
   return (
     <>
       <div className={`modal-overlay ${isOpen ? 'open' : ''}`} style={{ display: isOpen ? 'block' : 'none', opacity: 0.5, zIndex: 1050 }} onClick={onClose} />
@@ -107,7 +116,13 @@ function Sidebar({ isOpen, onClose, settings, onSettingChange }: any) {
 }
 
 function App() {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('admin') === 'true';
+    }
+    return false;
+  });
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -117,7 +132,7 @@ function App() {
   const [selType, setSelType] = useState<string[]>([]);
   const [selYear, setSelYear] = useState<string[]>([]);
 
-  const [settings, setSettings] = useState({ autoExp: false, showOpt: true, showAns: false, showExp: false });
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     // 1. Fetch Global Settings (Fonts)
@@ -147,11 +162,6 @@ function App() {
         });
       }
     };
-
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('admin') === 'true') {
-      setIsAdmin(true);
-    }
     
     fetchSettings();
     fetchQuestions();
@@ -170,16 +180,13 @@ function App() {
     };
   }, []);
 
-  const updateQuestions = async (newQuestions: Question[]) => {
+  const updateQuestions = (newQuestions: Question[]) => {
     setQuestions(newQuestions);
-    // In a real production app, you'd want to handle individual row updates/inserts/deletes
-    // For now, we'll just keep the local state updated. 
-    // The Admin panel will need specific logic to save to Supabase.
   };
 
-  const handleSettingChange = (key: string, val: boolean) => {
+  const handleSettingChange = (key: keyof Settings, val: boolean) => {
     setSettings(prev => {
-      let n = { ...prev, [key]: val };
+      const n = { ...prev, [key]: val };
       if (key === 'showExp' && val) n.showAns = true;
       if (key === 'showAns' && !val) n.showExp = false;
       return n;
@@ -262,10 +269,10 @@ function App() {
   );
 }
 
-function FilterBar({ collegeOptions, subjectOptions, typeOptions, yearOptions, selInst, setSelInst, selSub, setSelSub, selType, setSelType, selYear, setSelYear, onClear }: any) {
+function FilterBar({ collegeOptions, subjectOptions, typeOptions, yearOptions, selInst, setSelInst, selSub, setSelSub, selType, setSelType, selYear, setSelYear, onClear }: { collegeOptions: string[]; subjectOptions: string[]; typeOptions: string[]; yearOptions: string[]; selInst: string[]; setSelInst: React.Dispatch<React.SetStateAction<string[]>>; selSub: string[]; setSelSub: React.Dispatch<React.SetStateAction<string[]>>; selType: string[]; setSelType: React.Dispatch<React.SetStateAction<string[]>>; selYear: string[]; setSelYear: React.Dispatch<React.SetStateAction<string[]>>; onClear: () => void }) {
   const [modal, setModal] = useState<string | null>(null);
   
-  const toggle = (setter: any, val: string) => {
+  const toggle = (setter: React.Dispatch<React.SetStateAction<string[]>>, val: string) => {
     setter((prev: string[]) => prev.includes(val) ? prev.filter(i => i !== val) : [...prev, val]);
   };
 
@@ -289,19 +296,40 @@ function FilterBar({ collegeOptions, subjectOptions, typeOptions, yearOptions, s
   );
 }
 
-function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: any) {
+function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { question: Question; isAdmin?: boolean; onUpdateField?: (f: keyof Question, v: any) => void; settings?: Settings }) {
   const [sel, setSel] = useState<number | null>(null);
+  
+  // States that need to sync with settings/isAdmin
   const [sol, setSol] = useState(false);
   const [optRevealed, setOptRevealed] = useState(true);
   const [ansRevealed, setAnsRevealed] = useState(false);
 
-  useEffect(() => { if (!isAdmin && settings) { setOptRevealed(settings.showOpt); setAnsRevealed(settings.showAns); setSol(settings.showExp); } }, [settings, isAdmin]);
-  useEffect(() => { setSel(null); if (!settings || isAdmin) { setSol(false); setOptRevealed(isAdmin); setAnsRevealed(false); } }, [question.id]);
+  // Sync state when settings or isAdmin changes
+  useEffect(() => {
+    if (isAdmin) {
+      setOptRevealed(true);
+      setAnsRevealed(false);
+      setSol(false);
+    } else if (settings) {
+      setOptRevealed(settings.showOpt);
+      setAnsRevealed(settings.showAns);
+      setSol(settings.showExp);
+    }
+  }, [isAdmin, settings]);
+
+  // Reset local selection when question changes
+  useEffect(() => {
+    setSel(null);
+  }, [question.id]);
 
   const handleOptionClick = (idx: number) => {
-    if (isAdmin || sel !== null) return;
-    setSel(idx);
-    if (settings?.autoExp) { setSol(true); setAnsRevealed(true); }
+    if (isAdmin) return;
+    // Allow selection if no option is selected OR if the answer is currently hidden
+    if (sel === null || !ansRevealed) {
+      setSel(idx);
+      setAnsRevealed(true);
+      if (settings?.autoExp) { setSol(true); }
+    }
   };
 
   return (
@@ -317,12 +345,18 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: an
             <div className="section">
               {question.options?.map((opt: string, i: number) => {
                 let cl = 'option';
-                if (sel !== null || ansRevealed) cl += (i === question.answerIndex ? ' correct-reveal' : (i === sel ? ' wrong-reveal' : ''));
-                return <button key={i} className={cl} onClick={() => handleOptionClick(i)} disabled={sel !== null && !isAdmin}><strong>{String.fromCharCode(65+i)})</strong><EditableText text={opt} isEditable={isAdmin} style={{ flex: 1, marginLeft: '0.5rem' }} onSave={(v:string) => { let o = [...question.options]; o[i] = v; onUpdateField?.('options', o); }} /></button>;
+                // Highlight only if answer is revealed or in admin preview
+                if (ansRevealed || isAdmin) {
+                  if (i === question.answerIndex) cl += ' correct-reveal';
+                  else if (i === sel) cl += ' wrong-reveal';
+                }
+                // Option is disabled only if an answer is already being revealed and it's not admin
+                const isInteractionDisabled = ansRevealed && !isAdmin;
+                return <button key={i} className={cl} onClick={() => handleOptionClick(i)} disabled={isInteractionDisabled}><strong>{String.fromCharCode(65+i)})</strong><EditableText text={opt} isEditable={isAdmin} style={{ flex: 1, marginLeft: '0.5rem' }} onSave={(v:string) => { const o = [...(question.options || [])]; o[i] = v; onUpdateField?.('options', o); }} /></button>;
               })}
             </div>
           )}
-          {((sel !== null || ansRevealed) && !optRevealed && !isAdmin) && (
+          {(ansRevealed && !optRevealed && !isAdmin) && (
             <div className="section">
               <div className="section-title">Correct Answer</div>
               <div style={{ fontWeight: 600, color: '#166534', padding: '0.75rem', background: 'var(--correct-bg)', borderRadius: '8px', border: '1px solid var(--correct)', fontSize: '0.9rem' }}>
@@ -331,6 +365,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: an
                   text={question.options?.[question.answerIndex || 0] || ""} 
                   isEditable={false} 
                   style={{ display: 'inline' }} 
+                  onSave={() => {}}
                 />
               </div>
             </div>
@@ -339,7 +374,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: an
         </>
       ) : (
         <>
-          <div className="section">{question.parts?.map((p: any, i: number) => <div key={i} className="cq-part"><strong>{p.label})</strong><EditableText text={p.question} isEditable={isAdmin} style={{ display: 'inline', marginLeft: '0.5rem' }} onSave={(v:string) => { let pts = [...question.parts]; pts[i] = { ...pts[i], question: v }; onUpdateField?.('parts', pts); }} /><span style={{ fontSize: '0.7rem', color: '#666', marginLeft: '0.5rem' }}>[{p.mark}]</span></div>)}</div>
+          <div className="section">{question.parts?.map((p: { label: string; question: string; mark: number }, i: number) => <div key={i} className="cq-part"><strong>{p.label})</strong><EditableText text={p.question} isEditable={isAdmin} style={{ display: 'inline', marginLeft: '0.5rem' }} onSave={(v:string) => { const pts = [...(question.parts || [])]; pts[i] = { ...pts[i], question: v }; onUpdateField?.('parts', pts); }} /><span style={{ fontSize: '0.7rem', color: '#666', marginLeft: '0.5rem' }}>[{p.mark}]</span></div>)}</div>
           {(sol || isAdmin) && <div className="section"><div className="section-title">Solution</div><EditableText text={question.solution || ""} isEditable={isAdmin} style={{ fontSize: '0.9rem', color: '#374151' }} onSave={(v:string) => onUpdateField?.('solution', v)} /></div>}
         </>
       )}
@@ -366,10 +401,16 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: an
   );
 }
 
-function AdminDashboard({ questions, onUpdate, onExit }: any) {
+function AdminDashboard({ questions, onUpdate, onExit }: { questions: Question[]; onUpdate: (qs: Question[]) => void; onExit: () => void }) {
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState("");
   const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
+
+  // Filtering State
+  const [selInst, setSelInst] = useState<string[]>([]);
+  const [selSub, setSelSub] = useState<string[]>([]);
+  const [selType, setSelType] = useState<string[]>([]);
+  const [selYear, setSelYear] = useState<string[]>([]);
 
   // Font Management
   const [fontBn, setFontBn] = useState("'Noto Serif Bengali', serif");
@@ -377,8 +418,8 @@ function AdminDashboard({ questions, onUpdate, onExit }: any) {
 
   useEffect(() => {
     const fetchSettings = async () => {
-      const { data, error } = await supabase.from('settings').select('*').single();
-      if (data && !error) {
+      const { data, error: settingsError } = await supabase.from('settings').select('*').single();
+      if (data && !settingsError) {
         setFontBn(data.font_bn);
         setFontEn(data.font_en);
       }
@@ -387,42 +428,157 @@ function AdminDashboard({ questions, onUpdate, onExit }: any) {
   }, []);
 
   const saveSettings = async () => {
-    const { error } = await supabase
+    const { error: upsertError } = await supabase
       .from('settings')
       .upsert({ id: 1, font_bn: fontBn, font_en: fontEn });
-    if (error) alert("Error saving settings: " + error.message);
+    if (upsertError) alert("Error saving settings: " + upsertError.message);
     else alert("Global settings saved!");
   };
 
   const handleBulkUpload = async () => {
-    if (!previewQuestions.length) return;
-    const toSave = previewQuestions.map((q: any) => {
+    if (!previewQuestions.length) {
+      alert("Please update preview first to validate your JSON.");
+      return;
+    }
+    const toSave = previewQuestions.map((q: Question) => {
       const { answerIndex, ...rest } = q;
       return {
         ...rest,
-        answer_index: answerIndex !== undefined ? answerIndex : q.answer_index
+        answer_index: answerIndex !== undefined ? answerIndex : (q as any).answer_index
       };
     });
-    const { error } = await supabase.from('questions').upsert(toSave);
-    if (error) alert("Error saving questions: " + error.message);
+    const { error: upsertError } = await supabase.from('questions').upsert(toSave);
+    if (upsertError) alert("Error saving questions: " + upsertError.message);
     else {
       alert("Questions saved to Supabase!");
       onUpdate(previewQuestions);
       setJsonInput("");
+      setPreviewQuestions([]);
     }
   };
 
-  useEffect(() => {
-    if (!jsonInput.trim()) { setPreviewQuestions([]); setError(""); return; }
-    try { const parsed = JSON.parse(jsonInput); setPreviewQuestions(Array.isArray(parsed) ? parsed : [parsed]); setError(""); }
-    catch (e) { setError("Invalid JSON"); setPreviewQuestions([]); }
-  }, [jsonInput]);
+  const processJson = () => {
+    if (!jsonInput.trim()) {
+      setPreviewQuestions([]);
+      setError("");
+      return;
+    }
+    try {
+      const parsed = JSON.parse(jsonInput);
+      setPreviewQuestions(Array.isArray(parsed) ? parsed : [parsed]);
+      setError("");
+    } catch {
+      setError("Invalid JSON");
+      setPreviewQuestions([]);
+    }
+  };
+
+  const handleJsonEditRequest = (q: Question) => {
+    setJsonInput(JSON.stringify(q, null, 2));
+    setPreviewQuestions([q]);
+    setError("");
+    window.scrollTo(0,0);
+  };
+
+  // CATEGORY OPTIONS (Independent Logic): Show ALL available options from the full dataset
+  const collegeOptions = useMemo(() => {
+    return Array.from(new Set(questions.map((q: Question) => String(q.institution || "").trim()))).filter(Boolean).sort();
+  }, [questions]);
+
+  const subjectOptions = useMemo(() => {
+    return Array.from(new Set(questions.map((q: Question) => String(q.subject || "").trim()))).filter(Boolean).sort();
+  }, [questions]);
+
+  const typeOptions = useMemo(() => {
+    return Array.from(new Set(questions.map((q: Question) => q.type === 'mcq' ? 'MCQ' : 'SQ'))).sort();
+  }, [questions]);
+
+  const yearOptions = useMemo(() => {
+    return Array.from(new Set(questions.map((q: Question) => String(q.year || "").trim()))).filter(Boolean).sort().reverse();
+  }, [questions]);
+
+  // FINAL FILTERED QUESTIONS
+  const filteredQuestions = useMemo(() => {
+    return questions.filter((q: Question) => {
+      const qInst = String(q.institution || "").trim().toLowerCase();
+      const qSub = String(q.subject || "").trim().toLowerCase();
+      const qYear = String(q.year || "").trim().toLowerCase();
+      const qType = (q.type === 'mcq' ? 'MCQ' : 'SQ').toLowerCase();
+
+      const matchInst = selInst.length === 0 || selInst.some(s => s.toLowerCase() === qInst);
+      const matchSub = selSub.length === 0 || selSub.some(s => s.toLowerCase() === qSub);
+      const matchType = selType.length === 0 || selType.some(s => s.toLowerCase() === qType);
+      const matchYear = selYear.length === 0 || selYear.some(s => s.toLowerCase() === qYear);
+
+      return matchInst && matchSub && matchType && matchYear;
+    });
+  }, [questions, selInst, selSub, selType, selYear]);
+
+  const clearAllFilters = () => {
+    setSelInst([]);
+    setSelSub([]);
+    setSelType([]);
+    setSelYear([]);
+  };
 
   return (
     <div className="admin-layout">
-      <div className="admin-panel">
-        <div className="admin-header"><h3>Admin Dashboard</h3><button className="btn btn-secondary" onClick={onExit}>Exit</button></div>
+      {/* Left Column: Question List */}
+      <div className="admin-question-list-column">
+        <div className="admin-header">
+          <h3>Questions ({questions.length})</h3>
+          <button className="btn btn-secondary" onClick={onExit}>Exit Admin</button>
+        </div>
         
+        <div className="sticky-filter-section">
+          <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h4 style={{ margin: 0 }}>Filter List ({filteredQuestions.length} matches)</h4>
+            { (selInst.length > 0 || selSub.length > 0 || selType.length > 0 || selYear.length > 0) && (
+              <button className="btn-text" onClick={clearAllFilters} style={{ fontSize: '0.7rem', color: 'var(--wrong)' }}>Clear All Filters</button>
+            )}
+          </div>
+          <FilterBar 
+            collegeOptions={collegeOptions}
+            subjectOptions={subjectOptions}
+            typeOptions={typeOptions}
+            yearOptions={yearOptions}
+            selInst={selInst} setSelInst={setSelInst}
+            selSub={selSub} setSelSub={setSelSub}
+            selType={selType} setSelType={setSelType}
+            selYear={selYear} setSelYear={setSelYear}
+            onClear={clearAllFilters}
+          />
+        </div>
+
+        <div className="admin-cards-view">
+          {filteredQuestions.map((q: Question, idx: number) => (
+            <div key={`${q.id}-${idx}`} className="admin-card-wrapper">
+              <div className="admin-card-actions">
+                <button 
+                  className={`btn ${q.hidden ? 'btn-secondary' : 'btn-primary'}`} 
+                  style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}
+                  onClick={() => onUpdate(questions.map((item: Question) => item.id === q.id ? { ...item, hidden: !item.hidden } : item))}
+                >
+                  {q.hidden ? '👁️ Show' : '🚫 Hide'}
+                </button>
+                <button 
+                  className="btn btn-secondary" 
+                  style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}
+                  onClick={() => handleJsonEditRequest(q)}
+                >
+                  ✏️ Edit JSON
+                </button>
+                {q.hidden && <span className="hidden-badge">HIDDEN</span>}
+              </div>
+              <QuestionCard question={q} isAdmin={false} settings={DEFAULT_SETTINGS} />
+            </div>
+          ))}
+          {filteredQuestions.length === 0 && <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No questions match your filters.</p>}
+        </div>
+      </div>
+
+      {/* Right Column: Editor and Preview */}
+      <div className="admin-editor-column">
         <div className="admin-section">
           <h4>Typography Settings</h4>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
@@ -449,31 +605,45 @@ function AdminDashboard({ questions, onUpdate, onExit }: any) {
           <button className="btn btn-primary" onClick={saveSettings}>Save Global Typography</button>
         </div>
 
-        <textarea className="json-textarea" placeholder="Paste JSON..." value={jsonInput} onChange={e => setJsonInput(e.target.value)} />
-        {error && <p className="error-msg">{error}</p>}
-        <div className="admin-actions">
-          <button className="btn btn-primary" onClick={handleBulkUpload} disabled={!previewQuestions.length}>Save Questions</button>
-          <button className="btn btn-secondary" onClick={() => { setJsonInput(""); }}>Reset</button>
+        <div className="admin-section" style={{ display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
+          <h4>JSON Editor</h4>
+          <textarea 
+            className="json-textarea" 
+            placeholder="Paste JSON here..." 
+            value={jsonInput} 
+            onChange={e => setJsonInput(e.target.value)}
+            style={{ flex: 1, minHeight: '250px' }}
+          />
+          {error && <p className="error-msg">{error}</p>}
+          <div className="admin-actions">
+            <button className="btn btn-primary" onClick={processJson}>🔄 Update Preview</button>
+            <button className="btn btn-primary" onClick={handleBulkUpload} disabled={!previewQuestions.length}>💾 Save to Database</button>
+            <button className="btn btn-secondary" onClick={() => { setJsonInput(""); setPreviewQuestions([]); setError(""); }}>Reset</button>
+          </div>
         </div>
         
-        <div className="question-list-container">
-          <table className="question-table" style={{ fontSize: '0.7rem' }}>
-            <thead><tr><th>Subj</th><th>Vis</th><th>Action</th></tr></thead>
-            <tbody>
-              {questions.map((q:any, idx:number) => (
-                <tr key={`${q.id}-${idx}`}>
-                  <td>{q.subject}</td>
-                  <td><button onClick={() => onUpdate(questions.map((item:any) => item.id === q.id ? { ...item, hidden: !item.hidden } : item))}>{q.hidden ? 'Show' : 'Hide'}</button></td>
-                  <td><button className="btn-edit" onClick={() => { setJsonInput(JSON.stringify(q, null, 2)); window.scrollTo(0,0); }}>Edit</button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="preview-panel">
+          <span className="preview-label">Live Preview</span>
+          <div className="content-feed">
+            {previewQuestions.map((q, i) => (
+              <QuestionCard 
+                key={i} 
+                question={q} 
+                isAdmin 
+                onUpdateField={(f: keyof Question, v: any) => { 
+                  const u = [...previewQuestions]; 
+                  u[i] = { ...u[i], [f]: v }; 
+                  setPreviewQuestions(u); 
+                  setJsonInput(JSON.stringify(u.length === 1 && !jsonInput.startsWith('[') ? u[0] : u, null, 2)); 
+                }} 
+              />
+            ))}
+            {previewQuestions.length === 0 && <p style={{ textAlign: 'center', padding: '2rem', border: '2px dashed #e2e8f0', borderRadius: '12px', color: '#94a3b8' }}>Preview will appear here after clicking "Update Preview"</p>}
+          </div>
         </div>
       </div>
-      <div className="preview-panel"><span className="preview-label">Live Preview</span><div className="content-feed">{previewQuestions.map((q, i) => <QuestionCard key={i} question={q} isAdmin onUpdateField={(f:string, v:any) => { let u = [...previewQuestions]; u[i] = { ...u[i], [f]: v }; setPreviewQuestions(u); setJsonInput(JSON.stringify(u.length === 1 && !jsonInput.startsWith('[') ? u[0] : u, null, 2)); }} />)}</div></div>
     </div>
   );
 }
 
-export default App
+export default App;
