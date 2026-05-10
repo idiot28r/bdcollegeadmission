@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile MCQ Learner</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --correct: #22c55e;
+            --correct-bg: #dcfce7;
+            --wrong: #ef4444;
+            --wrong-bg: #fee2e2;
+            --wrong-2: #f87171;
+            --wrong-3: #fca5a5;
+            --border: #e5e7eb;
+            
+            /* Neutral Chart Colors (Default) */
+            --chart-n-correct: #94a3b8;
+            --chart-n-w1: #cbd5e1;
+            --chart-n-w2: #e2e8f0;
+            --chart-n-w3: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
+
+        body { background-color: var(--bg); color: var(--text-main); padding-bottom: 80px; overflow-x: hidden; }
+
+        /* Header */
+        header {
+            background: white; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 10;
+        }
+        header h2 { font-size: 1.25rem; font-weight: 700; }
+        .menu-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.25rem; }
+
+        /* Container */
+        #feed { width: 100%; max-width: 600px; margin: 0 auto; padding: 1rem; display: flex; flex-direction: column; gap: 1rem; overflow-x: hidden; }
+
+        /* MCQ Card */
+        .card { 
+            background: var(--card-bg); border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); overflow: hidden;
+            position: relative; will-change: transform; touch-action: pan-y; transition: opacity 0.3s, filter 0.3s;
+            
+            /* Chart Color Variables mapped to Neutrals by default */
+            --c-correct: var(--chart-n-correct);
+            --c-w1: var(--chart-n-w1);
+            --c-w2: var(--chart-n-w2);
+            --c-w3: var(--chart-n-w3);
+        }
+
+        /* Read State */
+        .card.read {
+            opacity: 0.6;
+            background-color: #f8fafc;
+            filter: grayscale(60%);
+        }
+
+        /* Active Colors */
+        .card.answer-revealed {
+            --c-correct: var(--correct);
+            --c-w1: var(--wrong);
+            --c-w2: var(--wrong-2);
+            --c-w3: var(--wrong-3);
+        }
+
+        .card-header { padding: 1.25rem; font-size: 1.1rem; font-weight: 600; line-height: 1.4; padding-right: 2rem; }
+
+        /* Card Footer / Toggles */
+        .card-footer {
+            display: flex; padding: 0.75rem; background: #f9fafb; border-top: 1px solid var(--border);
+            justify-content: space-between; gap: 0.5rem;
+        }
+        
+        .toggle-btn {
+            flex: 1; background: transparent; border: none; padding: 0.5rem 0.25rem; border-radius: 8px;
+            font-size: 0.8rem; font-weight: 600; cursor: pointer; color: var(--text-muted); transition: 0.2s;
+            display: flex; flex-direction: column; align-items: center; gap: 0.25rem;
+        }
+        .toggle-btn.active { color: var(--primary); background: #e0e7ff; }
+
+        /* Sections */
+        .section { padding: 0 1.25rem 1.25rem 1.25rem; display: none; animation: fadeIn 0.2s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .section-title { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem; font-weight: 700; letter-spacing: 0.05em; }
+
+        /* Options */
+        .options-container.locked .option { pointer-events: none; }
+        .option {
+            padding: 1rem; border: 1.5px solid var(--border); border-radius: 12px; margin-bottom: 0.75rem;
+            font-size: 1rem; cursor: pointer; transition: background 0.2s, border-color 0.2s; display: flex; align-items: center; justify-content: space-between;
+        }
+        .option:active { transform: scale(0.98); }
+        .option.correct-reveal { border-color: var(--correct); background: var(--correct-bg); color: #166534; font-weight: 600; }
+        .option.wrong-reveal { border-color: var(--wrong); background: var(--wrong-bg); color: #991b1b; }
+
+        /* Analytics */
+        .analytics-container { display: flex; align-items: center; gap: 1.5rem; }
+        .pie-chart { width: 100px; height: 100px; min-width: 100px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: background 0.3s; }
+        .analytics-legend { flex: 1; display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.85rem; }
+        .legend-item { display: flex; align-items: center; gap: 0.5rem; }
+        .legend-color { width: 12px; height: 12px; border-radius: 4px; transition: background 0.3s; }
+
+        /* Sidebar Overlay */
+        #sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 99; display: none; opacity: 0; transition: opacity 0.3s; }
+        #sidebar-overlay.open { display: block; opacity: 1; }
+
+        /* Sidebar */
+        #sidebar {
+            position: fixed; top: 0; right: -100%; width: 85%; max-width: 340px; height: 100vh; background: white;
+            transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1); z-index: 100; padding: 1.5rem; overflow-y: auto;
+        }
+        #sidebar.open { right: 0; box-shadow: -4px 0 25px rgba(0,0,0,0.2); }
+        .sidebar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .close-btn { background: #f3f4f6; border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.25rem; cursor: pointer; color: var(--text-main); display: flex; align-items: center; justify-content: center; }
+        
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; font-size: 1rem; }
+        
+        /* Switch UI */
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #d1d5db; transition: .3s; border-radius: 28px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        input:checked + .slider { background-color: var(--primary); }
+        input:checked + .slider:before { transform: translateX(22px); }
+
+        .loader { text-align: center; padding: 2rem; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+
+        /* --- VISUAL CUES & ANIMATIONS --- */
+        
+        /* The Wobble Animation */
+        @keyframes cardWobble {
+            /* The wobble starts at 0% and ends at 15% */
+            /* This ensures the physical movement still takes exactly 0.3s */
+            0% { transform: translateX(0); }
+            6% { transform: translateX(-8px); }
+            12% { transform: translateX(6px); }
+            18% { transform: translateX(6px); } /* Adjusted for same visual cadence */
+            18% { transform: translateX(-4px); }
+            24% { transform: translateX(2px); }
+            
+            /* The remaining 85% of the 2s duration (1.7s) is the pause */
+            30%, 100% { transform: translateX(0); }
+        }
+
+.wobble-active { 
+    animation: cardWobble 2s infinite ease-in-out; 
+}
+        /* The Swipe Hints */
+        .swipe-hint-cue {
+            position: absolute; top: 1rem; right: 1rem; background: var(--primary); color: white;
+            padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
+            pointer-events: none; z-index: 5; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: hintBounce 1.5s infinite ease-in-out; transition: opacity 0.3s ease;
+        }
+        @keyframes hintBounce {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(-10px); }
+        }
+
+        /* Unread Variation */
+        .swipe-hint-cue.unread-cue {
+            right: auto; left: 1rem; background: #374151; /* Dark gray */
+            animation: hintBounceRight 1.5s infinite ease-in-out;
+        }
+        @keyframes hintBounceRight {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(10px); }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h2>MCQ Learner</h2>
+        <button class="menu-btn" onclick="toggleSidebar()">⚙️</button>
+    </header>
+
+    <div id="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <div id="sidebar">
+        <div class="sidebar-header">
+            <h3>View Settings</h3>
+            <button class="close-btn" onclick="toggleSidebar()">✕</button>
+        </div>
+
+        <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);">
+            <div class="toggle-row">
+                <span><strong>Auto-show Explanation</strong><br><small style="color:var(--text-muted)">After making a choice</small></span>
+                <label class="switch">
+                    <input type="checkbox" id="setting-auto-exp">
+                    <span class="slider"></span>
+                </label>
+            </div>
+        </div>
+
+        <h4 style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.8rem; letter-spacing: 0.05em; text-transform: uppercase;">Global View Toggles</h4>
+
+        <div class="toggle-row">
+            <span>Options</span>
+            <label class="switch">
+                <input type="checkbox" id="setting-opt" onchange="handleGlobalRule('opt')">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="toggle-row">
+            <span>Correct Answer</span>
+            <label class="switch">
+                <input type="checkbox" id="setting-ans" onchange="handleGlobalRule('ans')">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="toggle-row">
+            <span>Explanation</span>
+            <label class="switch">
+                <input type="checkbox" id="setting-exp" onchange="handleGlobalRule('exp')">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="toggle-row">
+            <span>Analytics</span>
+            <label class="switch">
+                <input type="checkbox" id="setting-ana" onchange="handleGlobalRule('ana')">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <div id="feed">
+        </div>
+    
+    <div class="loader" id="loader">Scroll to load more...</div>
+
+    <script>
+        let questionCounter = 0;
+        const feed = document.getElementById('feed');
+        let isDragAction = false; 
+        let hasMarkedReadOnce = false; // Tracks if the user has successfully read a card
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('open');
+        }
+
+        // --- STATE ENFORCEMENT & RULES ---
+
+        function handleGlobalRule(source) {
+            const opt = document.getElementById('setting-opt');
+            const ans = document.getElementById('setting-ans');
+            const exp = document.getElementById('setting-exp');
+            const ana = document.getElementById('setting-ana');
+
+            if (source === 'ana' && ana.checked) opt.checked = true;
+            if (source === 'opt' && !opt.checked) ana.checked = false;
+            if (source === 'exp' && exp.checked) ans.checked = true;
+            if (source === 'ans' && !ans.checked) exp.checked = false;
+
+            document.querySelectorAll('.card').forEach(card => {
+                card.dataset.opt = opt.checked;
+                card.dataset.ans = ans.checked;
+                card.dataset.exp = exp.checked;
+                card.dataset.ana = ana.checked;
+                renderCardState(card.dataset.id);
+            });
+        }
+
+        function toggleLocalSection(id, prefix) {
+            if (isDragAction) return; 
+
+            const card = document.querySelector(`.card[data-id="${id}"]`);
+            const turningOn = card.dataset[prefix] !== 'true';
+            card.dataset[prefix] = turningOn;
+
+            if (prefix === 'ana' && turningOn) card.dataset.opt = 'true';
+            if (prefix === 'opt' && !turningOn) card.dataset.ana = 'false';
+            
+            if (prefix === 'exp' && turningOn) card.dataset.ans = 'true';
+            if (prefix === 'ans' && !turningOn) card.dataset.exp = 'false';
+
+            renderCardState(id);
+        }
+
+        function renderCardState(id) {
+            const card = document.querySelector(`.card[data-id="${id}"]`);
+            if (!card) return;
+
+            const opt = card.dataset.opt === 'true';
+            const ans = card.dataset.ans === 'true';
+            const exp = card.dataset.exp === 'true';
+            const ana = card.dataset.ana === 'true';
+            
+            const correctIndex = parseInt(card.dataset.correct);
+            const isAnswered = card.classList.contains('answered');
+
+            card.querySelector(`#btn-opt-${id}`).classList.toggle('active', opt);
+            card.querySelector(`#btn-ans-${id}`).classList.toggle('active', ans);
+            card.querySelector(`#btn-exp-${id}`).classList.toggle('active', exp);
+            card.querySelector(`#btn-ana-${id}`).classList.toggle('active', ana);
+
+            card.querySelector(`#sec-opt-${id}`).style.display = opt ? 'block' : 'none';
+            card.querySelector(`#sec-exp-${id}`).style.display = exp ? 'block' : 'none';
+            card.querySelector(`#sec-ana-${id}`).style.display = ana ? 'block' : 'none';
+
+            const ansSection = card.querySelector(`#sec-ans-${id}`);
+            const optionsContainer = card.querySelector(`#sec-opt-${id}`);
+            const options = optionsContainer.querySelectorAll('.option');
+
+            ansSection.style.display = (ans && !opt) ? 'block' : 'none';
+
+            if (ans || isAnswered) {
+                card.classList.add('answer-revealed'); 
+                optionsContainer.classList.add('locked'); 
+                options[correctIndex].classList.add('correct-reveal'); 
+            } else {
+                card.classList.remove('answer-revealed');
+                optionsContainer.classList.remove('locked');
+                options[correctIndex].classList.remove('correct-reveal');
+            }
+        }
+
+        // --- INTERACTION LOGIC ---
+
+        function handleOptionClick(element, selectedIndex, correctIndex, cardId) {
+            if (isDragAction) return; 
+
+            const card = document.querySelector(`.card[data-id="${cardId}"]`);
+            if (card.classList.contains('answered') || card.dataset.ans === 'true') return;
+            
+            card.classList.add('answered'); 
+            
+            if (selectedIndex !== correctIndex) {
+                element.classList.add('wrong-reveal'); 
+            }
+
+            if (document.getElementById('setting-auto-exp').checked) {
+                card.dataset.exp = 'true';
+                card.dataset.ans = 'true'; 
+            }
+
+            renderCardState(cardId);
+        }
+
+        // --- TOUCH / SWIPE TO READ LOGIC ---
+
+        let startX = 0, startY = 0, currentX = 0;
+        let isSwiping = false, directionDetermined = false, swipeCard = null;
+
+        feed.addEventListener('touchstart', e => {
+            // Dismiss ANY active visual cues instantly on screen touch
+            const cues = document.querySelectorAll('.swipe-hint-cue');
+            cues.forEach(cue => {
+                cue.style.opacity = '0';
+                setTimeout(() => cue.remove(), 300);
+            });
+
+            // Stop the wobble permanently when they interact
+            document.querySelectorAll('.wobble-active').forEach(card => {
+                card.classList.remove('wobble-active');
+            });
+
+            const card = e.target.closest('.card');
+            if (!card) return; 
+            
+            swipeCard = card;
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+            isSwiping = true;
+            directionDetermined = false;
+            isDragAction = false; 
+            
+            swipeCard.style.transition = 'none'; 
+        }, { passive: true });
+
+        feed.addEventListener('touchmove', e => {
+            if (!isSwiping || !swipeCard) return;
+            
+            currentX = e.touches[0].clientX;
+            let currentY = e.touches[0].clientY;
+            let diffX = currentX - startX;
+            let diffY = currentY - startY;
+
+            if (!directionDetermined) {
+                if (Math.abs(diffX) > 10 || Math.abs(diffY) > 10) {
+                    directionDetermined = true;
+                    if (Math.abs(diffY) > Math.abs(diffX)) {
+                        isSwiping = false; 
+                        swipeCard.style.transition = 'transform 0.3s ease';
+                        swipeCard.style.transform = `translateX(0)`;
+                        swipeCard = null;
+                        return;
+                    }
+                } else {
+                    return; 
+                }
+            }
+
+            isDragAction = true;
+            if (e.cancelable) e.preventDefault(); 
+            
+            swipeCard.style.transform = `translateX(${diffX}px)`;
+        }, { passive: false });
+
+        feed.addEventListener('touchend', e => {
+            if (!isSwiping || !swipeCard) return;
+            let diffX = currentX - startX;
+            
+            swipeCard.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s, filter 0.3s';
+            swipeCard.style.transform = `translateX(0)`;
+
+            // Check if threshold is crossed
+            if (directionDetermined && Math.abs(diffX) > 80) {
+                const isNowRead = swipeCard.classList.toggle('read');
+                
+                // Show "Unread" cue if this is their first time successfully reading a card
+                if (isNowRead && !hasMarkedReadOnce) {
+                    hasMarkedReadOnce = true;
+                    const unreadCue = document.createElement('div');
+                    unreadCue.className = 'swipe-hint-cue unread-cue';
+                    unreadCue.id = 'first-unread-cue';
+                    unreadCue.innerHTML = '👉 Swipe to unread';
+                    swipeCard.appendChild(unreadCue);
+                }
+            }
+
+            isSwiping = false;
+            directionDetermined = false;
+            swipeCard = null;
+
+            setTimeout(() => { isDragAction = false; }, 50);
+        });
+
+        // --- UI GENERATION ---
+
+        function generateMCQData() {
+            questionCounter++;
+            const correctIndex = Math.floor(Math.random() * 4);
+            let p1 = Math.floor(Math.random() * 40) + 10;
+            let p2 = Math.floor(Math.random() * (90 - p1)) + 5;
+            let p3 = Math.floor(Math.random() * (95 - p1 - p2)) + 5;
+            let p4 = 100 - p1 - p2 - p3;
+            
+            return {
+                id: questionCounter,
+                question: `${questionCounter}. What is the primary function of the mitochondrion in a cellular environment?`,
+                options: [ "Synthesizing proteins from amino acids", "Generating ATP through cellular respiration", "Storing genetic information", "Breaking down cellular waste" ],
+                correctIndex: correctIndex,
+                explanation: `The mitochondrion is known as the powerhouse of the cell because it generates most of the cell's supply of adenosine triphosphate (ATP), used as a source of chemical energy.`,
+                analytics: { attempts: Math.floor(Math.random() * 5000) + 500, stats: [p1, p2, p3, p4] }
+            };
+        }
+
+        function createCard() {
+            const data = generateMCQData();
+            const card = document.createElement('div');
+            
+            // Add normal class, plus 'wobble-active' if it's the very first card
+            card.className = data.id === 1 ? 'card wobble-active' : 'card';
+            
+            card.dataset.id = data.id;
+            card.dataset.correct = data.correctIndex;
+            
+            card.dataset.opt = document.getElementById('setting-opt').checked;
+            card.dataset.ans = document.getElementById('setting-ans').checked;
+            card.dataset.exp = document.getElementById('setting-exp').checked;
+            card.dataset.ana = document.getElementById('setting-ana').checked;
+
+            let optionsHTML = '';
+            data.options.forEach((opt, index) => {
+                const prefix = String.fromCharCode(65+index); 
+                optionsHTML += `<div class="option" onclick="handleOptionClick(this, ${index}, ${data.correctIndex}, ${data.id})"><strong>${prefix})</strong> <span style="flex:1; margin-left:10px;">${opt}</span></div>`;
+            });
+
+            const cssVars = ['--c-correct', '--c-w1', '--c-w2', '--c-w3'];
+            let gradientStops = [], legendHTML = '', currentPercentage = 0, mappedVars = [], wrongCounter = 1;
+            
+            for(let i=0; i<4; i++) {
+                if(i === data.correctIndex) mappedVars.push(cssVars[0]);
+                else { mappedVars.push(cssVars[wrongCounter]); wrongCounter++; }
+            }
+
+            data.analytics.stats.forEach((stat, index) => {
+                const colorVar = mappedVars[index];
+                gradientStops.push(`var(${colorVar}) ${currentPercentage}% ${currentPercentage + stat}%`);
+                currentPercentage += stat;
+                
+                legendHTML += `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(${colorVar})"></div>
+                        <span>Opt ${String.fromCharCode(65+index)}: <strong>${stat}%</strong></span>
+                    </div>
+                `;
+            });
+
+            let cueHTML = data.id === 1 ? `<div class="swipe-hint-cue" id="first-swipe-cue">👈 Swipe to mark read</div>` : '';
+
+            card.innerHTML = `
+                ${cueHTML}
+                <div class="card-header">${data.question}</div>
+                
+                <div class="section options-container" id="sec-opt-${data.id}">
+                    ${optionsHTML}
+                </div>
+
+                <div class="section" id="sec-ans-${data.id}">
+                    <div class="section-title">Correct Answer</div>
+                    <p style="font-weight: 600; color: #166534; padding: 1rem; background: var(--correct-bg); border-radius: 8px; border: 1px solid var(--correct);">
+                        ${String.fromCharCode(65+data.correctIndex)}) ${data.options[data.correctIndex]}
+                    </p>
+                </div>
+
+                <div class="section" id="sec-exp-${data.id}">
+                    <div class="section-title">Explanation</div>
+                    <p style="line-height: 1.5; font-size: 0.95rem; color: #374151;">${data.explanation}</p>
+                </div>
+
+                <div class="section" id="sec-ana-${data.id}">
+                    <div class="section-title">Analytics <span style="text-transform:none; font-weight:normal;">(${data.analytics.attempts.toLocaleString()} attempts)</span></div>
+                    <div class="analytics-container">
+                        <div class="pie-chart" style="background: conic-gradient(${gradientStops.join(', ')})"></div>
+                        <div class="analytics-legend">${legendHTML}</div>
+                    </div>
+                </div>
+
+                <div class="card-footer">
+                    <button class="toggle-btn" id="btn-opt-${data.id}" onclick="toggleLocalSection(${data.id}, 'opt')">
+                        <span style="font-size:1.1rem;">📝</span> Options
+                    </button>
+                    <button class="toggle-btn" id="btn-ans-${data.id}" onclick="toggleLocalSection(${data.id}, 'ans')">
+                        <span style="font-size:1.1rem;">🎯</span> Answer
+                    </button>
+                    <button class="toggle-btn" id="btn-exp-${data.id}" onclick="toggleLocalSection(${data.id}, 'exp')">
+                        <span style="font-size:1.1rem;">💡</span> Explain
+                    </button>
+                    <button class="toggle-btn" id="btn-ana-${data.id}" onclick="toggleLocalSection(${data.id}, 'ana')">
+                        <span style="font-size:1.1rem;">📊</span> Stats
+                    </button>
+                </div>
+            `;
+
+            feed.appendChild(card);
+            renderCardState(data.id);
+        }
+
+        window.addEventListener('scroll', () => {
+            if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 300) {
+                createCard();
+                createCard();
+            }
+        });
+
+        for(let i=0; i<4; i++) createCard();
+
+    </script>
+</body>
+</html>

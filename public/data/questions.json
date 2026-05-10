@@ -1,0 +1,136 @@
+[
+  {
+    "id": "1",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2023",
+    "subject": "Physics",
+    "topic": "Mechanics",
+    "question": "একটি বস্তুর ভর $m=5\\text{ kg}$ এবং এটি $v=10\\text{ ms}^{-1}$ বেগে চলছে। এর গতিশক্তি কত?",
+    "options": ["$250\\text{ J}$", "$500\\text{ J}$", "$100\\text{ J}$", "$50\\text{ J}$"],
+    "answerIndex": 0,
+    "explanation": "গতিশক্তি $E_k = \\frac{1}{2}mv^2 = \\frac{1}{2} \\times 5 \\times 10^2 = 250\\text{ J}$"
+  },
+  {
+    "id": "2",
+    "type": "mcq",
+    "institution": "HCC",
+    "year": "2022",
+    "subject": "Chemistry",
+    "topic": "Periodic Table",
+    "question": "নিচের কোনটি একটি হ্যালোজেন মৌল নয়?",
+    "options": ["Fluorine (F)", "Chlorine (Cl)", "Bromine (Br)", "Sodium (Na)"],
+    "answerIndex": 3,
+    "explanation": "Sodium (Na) একটি ক্ষার ধাতু, হ্যালোজেন নয়।"
+  },
+  {
+    "id": "3",
+    "type": "sq",
+    "institution": "SJHS",
+    "year": "2023",
+    "subject": "Math",
+    "stimulus": "একটি বৃত্তের সমীকরণ $x^2 + y^2 - 4x - 6y + 9 = 0$।",
+    "parts": [
+      { "label": "ক", "question": "বৃত্তটির কেন্দ্র নির্ণয় কর।", "mark": 2 },
+      { "label": "খ", "question": "বৃত্তটির ব্যাসার্ধ কত?", "mark": 2 },
+      { "label": "গ", "question": "বৃত্তটি $x$-অক্ষকে কোন বিন্দুতে ছেদ করে?", "mark": 3 },
+      { "label": "ঘ", "question": "বৃত্তটির ক্ষেত্রফল নির্ণয় কর।", "mark": 3 }
+    ],
+    "solution": "<p><strong>ক)</strong> কেন্দ্র $(2, 3)$।</p><p><strong>খ)</strong> ব্যাসার্ধ $r = \\sqrt{2^2 + 3^2 - 9} = 2$।</p><p><strong>গ)</strong> $y=0$ বসালে, $x^2 - 4x + 9 = 0$। যেহেতু $D = 16 - 36 < 0$, তাই ছেদ করে না।</p><p><strong>ঘ)</strong> ক্ষেত্রফল $\\pi r^2 = 4\\pi$ বর্গ একক।</p>"
+  },
+  {
+    "id": "4",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2023",
+    "subject": "Math",
+    "topic": "Trigonometry",
+    "question": "যদি $\\sin \\theta = \\frac{3}{5}$ হয়, তবে $\\tan \\theta$ এর মান কত? (যেখানে $0 < \\theta < \\frac{\\pi}{2}$)",
+    "options": ["$\\frac{4}{3}$", "$\\frac{3}{4}$", "$\\frac{4}{5}$", "$\\frac{5}{4}$"],
+    "answerIndex": 1,
+    "explanation": "$\\cos \\theta = \\sqrt{1 - \\sin^2 \\theta} = \\frac{4}{5}$। সুতরাং, $\\tan \\theta = \\frac{\\sin \\theta}{\\cos \\theta} = \\frac{3/5}{4/5} = \\frac{3}{4}$।"
+  },
+  {
+    "id": "5",
+    "type": "mcq",
+    "institution": "HCC",
+    "year": "2023",
+    "subject": "English",
+    "topic": "Grammar",
+    "question": "Which sentence is correct?",
+    "options": [
+      "I have seen him yesterday.",
+      "I saw him yesterday.",
+      "I had seen him yesterday.",
+      "I would see him yesterday."
+    ],
+    "answerIndex": 1,
+    "explanation": "With past time markers like 'yesterday', Simple Past tense is used."
+  },
+  {
+    "id": "6",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2021",
+    "subject": "Physics",
+    "stimulus": "একটি উত্তল লেন্সের ফোকাস দূরত্ব $f = 10\\text{ cm}$। লেন্স থেকে $15\\text{ cm}$ দূরে একটি বস্তু রাখা হলো।",
+    "parts": [
+      { "label": "ক", "question": "লেন্সটির ক্ষমতা (Power) কত?", "mark": 2 },
+      { "label": "খ", "question": "বিম্বের দূরত্ব ($v$) নির্ণয় কর।", "mark": 3 },
+      { "label": "গ", "question": "বিম্বটি বাস্তব নাকি অবাস্তব?", "mark": 2 },
+      { "label": "ঘ", "question": "বিম্বের রৈখিক বিবর্ধন ($m$) কত?", "mark": 3 }
+    ],
+    "solution": "<p><strong>ক)</strong> $P = \\frac{1}{f} = \\frac{1}{0.1} = 10$ Dioptre (D)।</p><p><strong>খ)</strong> $\\frac{1}{v} = \\frac{1}{f} - \\frac{1}{u} = \\frac{1}{10} - \\frac{1}{15} = \\frac{3-2}{30} = \\frac{1}{30} \\implies v = 30\\text{ cm}$।</p><p><strong>গ)</strong> যেহেতু $v$ ধনাত্মক, বিম্বটি বাস্তব।</p><p><strong>ঘ)</strong> $m = |-\\frac{v}{u}| = \\frac{30}{15} = 2$।</p>"
+  },
+  {
+    "id": "7",
+    "type": "mcq",
+    "institution": "SJHS",
+    "year": "2023",
+    "subject": "Biology",
+    "topic": "Genetics",
+    "question": "বংশগতিবিদ্যার জনক কে?",
+    "options": ["Charles Darwin", "Gregor Johann Mendel", "Robert Hooke", "Lamarck"],
+    "answerIndex": 1,
+    "explanation": "গ্রেগর জোহান মেন্ডেলকে বংশগতিবিদ্যার জনক বলা হয়।"
+  },
+  {
+    "id": "8",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2023",
+    "subject": "GK",
+    "topic": "Bangladesh",
+    "question": "বাংলাদেশের সংবিধান কার্যকর হয় কোন তারিখ থেকে?",
+    "options": ["১৬ ডিসেম্বর ১৯৭২", "২৬ মার্চ ১৯৭২", "১০ এপ্রিল ১৯৭২", "৭ নভেম্বর ১৯৭২"],
+    "answerIndex": 0,
+    "explanation": "বাংলাদেশের সংবিধান ১৬ ডিসেম্বর ১৯৭২ থেকে কার্যকর হয়।"
+  },
+  {
+    "id": "9",
+    "type": "mcq",
+    "institution": "HCC",
+    "year": "2022",
+    "subject": "Math",
+    "topic": "Calculus",
+    "question": "$\\frac{d}{dx}(\\sin^2 x)$ এর মান কত?",
+    "options": ["$\\cos^2 x$", "$\\sin 2x$", "$2\\sin x$", "$2\\cos x$"],
+    "answerIndex": 1,
+    "explanation": "$\\frac{d}{dx}(\\sin^2 x) = 2\\sin x \\frac{d}{dx}(\\sin x) = 2\\sin x \\cos x = \\sin 2x$।"
+  },
+  {
+    "id": "10",
+    "type": "sq",
+    "institution": "HCC",
+    "year": "2023",
+    "subject": "Chemistry",
+    "stimulus": "$25^{\\circ}\\text{C}$ তাপমাত্রায় $A$ ও $B$ দুটি গ্যাসীয় পদার্থের বিক্রিয়ায় $C$ উৎপন্ন হয়।",
+    "parts": [
+      { "label": "ক", "question": "সক্রিয়ণ শক্তি কী?", "mark": 1 },
+      { "label": "খ", "question": "তাপমাত্রা বৃদ্ধিতে বিক্রিয়ার হার বৃদ্ধি পায় কেন?", "mark": 2 },
+      { "label": "গ", "question": "বিক্রিয়ার সাম্যাবস্থার ওপর চাপের প্রভাব আলোচনা কর।", "mark": 3 },
+      { "label": "ঘ", "question": "লা-শাতেলীয়ার নীতি প্রয়োগ করে $C$ এর উৎপাদন বৃদ্ধির শর্তাবলী লিখ।", "mark": 4 }
+    ],
+    "solution": "<p><strong>ক)</strong> কোনো বিক্রিয়া শুরু করার জন্য প্রয়োজনীয় ন্যূনতম শক্তিই হলো সক্রিয়ণ শক্তি।</p><p><strong>খ)</strong> তাপমাত্রা বাড়লে অণুগুলোর গতিশক্তি বাড়ে এবং কার্যকর সংঘর্ষের সংখ্যা বৃদ্ধি পায়।</p><p><strong>গ)</strong> চাপের প্রভাব নির্ভর করে বিক্রিয়ক ও উৎপাদের মোল সংখ্যার ওপর।</p><p><strong>ঘ)</strong> তাপমাত্রা কমালে এবং চাপ বাড়ালে বিক্রিয়ার হার বাড়তে পারে (বিক্রিয়ার প্রকৃতির ওপর ভিত্তি করে)।</p>"
+  }
+]

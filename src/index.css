@@ -1,0 +1,407 @@
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Hind+Siliguri:wght@400;600;700&family=Noto+Serif+Bengali:wght@400;700&display=swap');
+@import url('https://fonts.maateen.me/kalpurush/font.css');
+@import url('https://fonts.maateen.me/solaimanlipi/font.css');
+@import url('https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css');
+
+:root {
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --bg: #f3f4f6;
+  --card-bg: #ffffff;
+  --text-main: #111827;
+  --text-muted: #6b7280;
+  --correct: #22c55e;
+  --correct-bg: #dcfce7;
+  --wrong: #ef4444;
+  --wrong-bg: #fee2e2;
+  --border: #e5e7eb;
+  --radius: 16px;
+
+  /* Subject Colors */
+  --color-physics: #3b82f6;
+  --color-chemistry: #10b981;
+  --color-math: #f59e0b;
+  --color-biology: #ec4899;
+  --color-english: #8b5cf6;
+  --color-gk: #64748b;
+
+  --font-en: 'Times New Roman', serif;
+  --font-bn: 'Noto Serif Bengali', serif;
+}
+
+* { 
+  box-sizing: border-box; 
+  margin: 0; 
+  padding: 0; 
+  font-family: var(--font-en), var(--font-bn), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+  -webkit-tap-highlight-color: transparent; 
+}
+
+body { 
+  background-color: var(--bg); 
+  color: var(--text-main); 
+  overflow-x: hidden; 
+}
+
+.app-container {
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Sticky Header & Filters */
+.sticky-top {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+header {
+  padding: 0.75rem 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+header h2 { 
+  font-size: 1.1rem; 
+  font-weight: 700; 
+  background: linear-gradient(135deg, var(--primary), #a855f7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Filter System */
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.4rem;
+  padding: 0.5rem;
+  background: #f9fafb;
+}
+
+.filter-btn {
+  padding: 0.4rem 0.2rem;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid var(--border);
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text-main);
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  transition: all 0.2s;
+}
+
+.filter-btn.active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: #eef2ff;
+}
+
+/* Modal for multi-select */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+
+.modal-content {
+  background: white;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  border-radius: 20px 20px 0 0;
+  padding: 1.25rem;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.option-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.checkbox-item.selected {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* MCQ Card */
+.content-feed {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.card { 
+  background: var(--card-bg); 
+  border-radius: var(--radius); 
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+  overflow: hidden;
+  position: relative;
+}
+
+.card-header-main { 
+  padding: 1rem 1.25rem; 
+  font-size: 1rem; 
+  font-weight: 600; 
+  line-height: 1.4; 
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 1.25rem;
+  border-bottom: 1px solid #f9fafb;
+}
+
+.badge {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+/* Card Sections */
+.section { 
+  padding: 0 1.25rem 1.25rem 1.25rem; 
+  animation: fadeIn 0.2s ease-in-out; 
+}
+
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(-5px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
+.section-title { 
+  font-size: 0.7rem; 
+  text-transform: uppercase; 
+  color: var(--text-muted); 
+  margin-bottom: 0.5rem; 
+  font-weight: 700; 
+  letter-spacing: 0.05em; 
+}
+
+/* Options */
+.option {
+  padding: 0.85rem; 
+  border: 1.5px solid var(--border); 
+  border-radius: 12px; 
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem; 
+  cursor: pointer; 
+  transition: all 0.2s; 
+  display: flex; 
+  align-items: center;
+  background: white;
+  width: 100%;
+  text-align: left;
+}
+
+.option:active { transform: scale(0.98); }
+.option.correct-reveal { border-color: var(--correct); background: var(--correct-bg); color: #166534; font-weight: 600; }
+.option.wrong-reveal { border-color: var(--wrong); background: var(--wrong-bg); color: #991b1b; }
+
+/* Card Footer Toggles */
+.card-footer {
+  display: flex; 
+  padding: 0.5rem; 
+  background: #f9fafb; 
+  border-top: 1px solid var(--border);
+  justify-content: space-between; 
+  gap: 0.25rem;
+}
+
+.toggle-btn {
+  flex: 1; 
+  background: transparent; 
+  border: none; 
+  padding: 0.4rem 0.2rem; 
+  border-radius: 8px;
+  font-size: 0.7rem; 
+  font-weight: 600; 
+  cursor: pointer; 
+  color: var(--text-muted); 
+  transition: 0.2s;
+  display: flex; 
+  flex-direction: column; 
+  align-items: center; 
+  gap: 0.1rem;
+}
+
+.toggle-btn.active { color: var(--primary); background: #e0e7ff; }
+
+/* Sidebar Drawer */
+#sidebar {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 85%;
+  max-width: 340px;
+  height: 100vh;
+  background: white;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1100;
+  padding: 1.5rem;
+  overflow-y: auto;
+  box-shadow: -4px 0 25px rgba(0,0,0,0.1);
+}
+
+#sidebar.open {
+  right: 0;
+}
+
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.close-btn {
+  background: #f3f4f6;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+/* Switch UI */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #d1d5db;
+  transition: .3s;
+  border-radius: 28px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+input:checked + .slider {
+  background-color: var(--primary);
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* SQ Special Styles */
+.sq-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-top: 1px solid var(--border);
+  cursor: pointer;
+  width: 100%;
+}
+
+.sq-footer:hover {
+  background: #f1f5f9;
+}
+
+/* Inline Edit styles */
+.editable-field:hover {
+  background: #fffbeb;
+  outline: 1px dashed #f59e0b;
+}
+
+.edit-input {
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  border: 1px solid var(--primary);
+  padding: 2px;
+  border-radius: 4px;
+}
+
+/* LaTeX spacing */
+.katex-display { margin: 0.5rem 0 !important; }
+.katex { font-size: 1em !important; }
