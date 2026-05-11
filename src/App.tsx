@@ -6,6 +6,7 @@ import './Admin.css'
 
 interface Question {
   id: string;
+  serial?: string | number;
   type: 'mcq' | 'sq';
   institution: string;
   year: string | number;
@@ -13,7 +14,7 @@ interface Question {
   topic?: string;
   question?: string;
   options?: string[];
-  answerIndex?: number;
+  answer_index?: number;
   explanation?: string;
   stimulus?: string;
   parts?: { label: string; question: string; mark: number }[];
@@ -30,12 +31,17 @@ const SUBJECT_COLORS: Record<string, string> = {
   GK: 'var(--color-gk)',
 };
 
+const VALID_INSTITUTIONS = ['NDC', 'HCC', 'SJHSS'];
+
 function validateQuestion(q: Question): { isValid: boolean; error?: string } {
   if (!q.institution || !q.year || !q.subject) return { isValid: false, error: "Missing metadata" };
+  if (!VALID_INSTITUTIONS.includes(q.institution)) return { isValid: false, error: "Invalid institution (must be NDC, HCC, or SJHSS)" };
+  if (q.serial === undefined || q.serial === "") return { isValid: false, error: "Missing serial number" };
+  
   if (q.type === 'mcq') {
     if (!q.question) return { isValid: false, error: "Missing question" };
     if (!q.options || q.options.length !== 4) return { isValid: false, error: "MCQ needs 4 options" };
-    if (q.answerIndex === undefined) return { isValid: false, error: "Missing answer index" };
+    if (q.answer_index === undefined) return { isValid: false, error: "Missing answer index" };
   } else {
     if (!q.stimulus && (!q.parts || q.parts.length === 0)) return { isValid: false, error: "SQ needs content" };
     if (!q.solution) return { isValid: false, error: "Missing solution" };
@@ -52,9 +58,28 @@ interface Settings {
 
 const DEFAULT_SETTINGS: Settings = { autoExp: false, showOpt: true, showAns: false, showExp: false };
 
+function sortQuestions(qs: Question[]): Question[] {
+  return [...qs].sort((a, b) => {
+    if (a.institution !== b.institution) return String(a.institution || "").localeCompare(String(b.institution || ""));
+    const yearA = Number(String(a.year || "").split('-')[0]);
+    const yearB = Number(String(b.year || "").split('-')[0]);
+    if (yearA !== yearB) return yearB - yearA;
+    if (a.subject !== b.subject) return String(a.subject || "").localeCompare(String(b.subject || ""));
+    if (a.type !== b.type) return String(a.type || "").localeCompare(String(b.type || ""));
+    return Number(a.serial || 0) - Number(b.serial || 0);
+  });
+}
+
+function cleanText(t: string) {
+  if (!t) return "";
+  // Remove leading numbers like "1. ", "24) ", "১. ", "১০। "
+  return t.replace(/^[\d\u09E6-\u09EF]+[\s.\u0964\)]+\s*/, "").trim();
+}
+
 function renderMath(text: string) {
   if (!text) return "";
-  let res = text.replace(/\$\$(.*?)\$\$/gs, (_, m) => katex.renderToString(m, { displayMode: true, throwOnError: false }));
+  const cleaned = cleanText(text);
+  let res = cleaned.replace(/\$\$(.*?)\$\$/gs, (_, m) => katex.renderToString(m, { displayMode: true, throwOnError: false }));
   res = res.replace(/\\\[(.*?)\\\]/gs, (_, m) => katex.renderToString(m, { displayMode: true, throwOnError: false }));
   res = res.replace(/\$(.*?)\$/g, (_, m) => katex.renderToString(m, { displayMode: false, throwOnError: false }));
   res = res.replace(/\\\((.*?)\\\)/g, (_, m) => katex.renderToString(m, { displayMode: false, throwOnError: false }));
@@ -146,20 +171,20 @@ function App() {
 
     // 2. Fetch Questions
     const fetchQuestions = async () => {
-      const { data, error } = await supabase.from('questions').select('*');
+      const { data, error } = await supabase
+        .from('questions')
+        .select('*');
+
       if (data && !error) {
-        const mapped = data.map((q: any) => ({
-          ...q,
-          answerIndex: q.answer_index // Map snake_case from DB to camelCase for frontend
-        }));
-        setQuestions(mapped);
+        setQuestions(sortQuestions(data));
         setLoading(false);
       } else {
-        // Fallback to local file if DB is empty or fails
-        fetch('/data/questions.json').then(res => res.json()).then(data => {
-          setQuestions(data);
-          setLoading(false);
-        });
+        fetch('/data/questions.json')
+          .then(res => res.json())
+          .then((data: Question[]) => {
+            setQuestions(sortQuestions(data));
+            setLoading(false);
+          });
       }
     };
     
@@ -332,11 +357,14 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
     }
   };
 
+  const showLabel = !!question.stimulus || (question.parts && question.parts.length > 1);
+
   return (
     <div className={`card ${question.hidden ? 'read' : ''}`}>
       <div className="card-meta">
         <span className="badge" style={{ background: SUBJECT_COLORS[question.subject] || '#666', color: 'white' }}>{question.subject}</span>
         <span className="badge" style={{ background: '#f1f5f9' }}>{question.institution} • {question.year}</span>
+        {question.serial && <span className="badge" style={{ background: '#e2e8f0', color: '#475569', fontWeight: 700 }}>#{question.serial}</span>}
       </div>
       <EditableText className="card-header-main" text={question.type === 'mcq' ? (question.question || "") : (question.stimulus || "")} isEditable={isAdmin} onSave={(v:string) => onUpdateField?.(question.type === 'mcq' ? 'question' : 'stimulus', v)} />
       {question.type === 'mcq' ? (
@@ -347,12 +375,29 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
                 let cl = 'option';
                 // Highlight only if answer is revealed or in admin preview
                 if (ansRevealed || isAdmin) {
-                  if (i === question.answerIndex) cl += ' correct-reveal';
+                  if (i === question.answer_index) cl += ' correct-reveal';
                   else if (i === sel) cl += ' wrong-reveal';
                 }
                 // Option is disabled only if an answer is already being revealed and it's not admin
                 const isInteractionDisabled = ansRevealed && !isAdmin;
-                return <button key={i} className={cl} onClick={() => handleOptionClick(i)} disabled={isInteractionDisabled}><strong>{String.fromCharCode(65+i)})</strong><EditableText text={opt} isEditable={isAdmin} style={{ flex: 1, marginLeft: '0.5rem' }} onSave={(v:string) => { const o = [...(question.options || [])]; o[i] = v; onUpdateField?.('options', o); }} /></button>;
+                return (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {isAdmin && (
+                      <input 
+                        type="radio" 
+                        name={`q-${question.id}-ans`} 
+                        checked={question.answer_index === i} 
+                        onChange={() => onUpdateField?.('answer_index', i)}
+                        title="Set as correct answer"
+                        style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                      />
+                    )}
+                    <button className={cl} onClick={() => handleOptionClick(i)} disabled={isInteractionDisabled} style={{ flex: 1 }}>
+                      <strong>{String.fromCharCode(65+i)})</strong>
+                      <EditableText text={opt} isEditable={isAdmin} style={{ flex: 1, marginLeft: '0.5rem' }} onSave={(v:string) => { const o = [...(question.options || [])]; o[i] = v; onUpdateField?.('options', o); }} />
+                    </button>
+                  </div>
+                );
               })}
             </div>
           )}
@@ -360,9 +405,9 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
             <div className="section">
               <div className="section-title">Correct Answer</div>
               <div style={{ fontWeight: 600, color: '#166534', padding: '0.75rem', background: 'var(--correct-bg)', borderRadius: '8px', border: '1px solid var(--correct)', fontSize: '0.9rem' }}>
-                <strong>{String.fromCharCode(65 + (question.answerIndex || 0))}) </strong>
+                <strong>{String.fromCharCode(65 + (question.answer_index || 0))}) </strong>
                 <EditableText 
-                  text={question.options?.[question.answerIndex || 0] || ""} 
+                  text={question.options?.[question.answer_index || 0] || ""} 
                   isEditable={false} 
                   style={{ display: 'inline' }} 
                   onSave={() => {}}
@@ -374,7 +419,16 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
         </>
       ) : (
         <>
-          <div className="section">{question.parts?.map((p: { label: string; question: string; mark: number }, i: number) => <div key={i} className="cq-part"><strong>{p.label})</strong><EditableText text={p.question} isEditable={isAdmin} style={{ display: 'inline', marginLeft: '0.5rem' }} onSave={(v:string) => { const pts = [...(question.parts || [])]; pts[i] = { ...pts[i], question: v }; onUpdateField?.('parts', pts); }} /><span style={{ fontSize: '0.7rem', color: '#666', marginLeft: '0.5rem' }}>[{p.mark}]</span></div>)}</div>
+          <div className="section">
+            {(question.parts || []).map((p: { label: string; question: string; mark: number }, i: number) => (
+              <div key={i} className="cq-part">
+                {showLabel && <strong>{p.label || "?"})</strong>}
+                <EditableText text={p.question || ""} isEditable={isAdmin} style={{ display: 'inline', marginLeft: showLabel ? '0.5rem' : '0' }} onSave={(v:string) => { const pts = [...(question.parts || [])]; pts[i] = { ...pts[i], question: v }; onUpdateField?.('parts', pts); }} />
+                <span style={{ fontSize: '0.7rem', color: '#666', marginLeft: '0.5rem' }}>[{p.mark || 0}]</span>
+              </div>
+            ))}
+            {isAdmin && (!question.parts || question.parts.length === 0) && <p style={{ color: 'var(--wrong)', fontSize: '0.8rem' }}>⚠️ Missing parts array</p>}
+          </div>
           {(sol || isAdmin) && <div className="section"><div className="section-title">Solution</div><EditableText text={question.solution || ""} isEditable={isAdmin} style={{ fontSize: '0.9rem', color: '#374151' }} onSave={(v:string) => onUpdateField?.('solution', v)} /></div>}
         </>
       )}
@@ -405,6 +459,18 @@ function AdminDashboard({ questions, onUpdate, onExit }: { questions: Question[]
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState("");
   const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
+
+  const copyPrompt = async () => {
+    try {
+      const res = await fetch('/question-prompt-template.md');
+      const text = await res.text();
+      await navigator.clipboard.writeText(text);
+      alert("Prompt template copied to clipboard!");
+    } catch (err) {
+      console.error("Failed to copy prompt:", err);
+      alert("Failed to copy prompt template.");
+    }
+  };
 
   // Filtering State
   const [selInst, setSelInst] = useState<string[]>([]);
@@ -440,18 +506,17 @@ function AdminDashboard({ questions, onUpdate, onExit }: { questions: Question[]
       alert("Please update preview first to validate your JSON.");
       return;
     }
-    const toSave = previewQuestions.map((q: Question) => {
-      const { answerIndex, ...rest } = q;
-      return {
-        ...rest,
-        answer_index: answerIndex !== undefined ? answerIndex : (q as any).answer_index
-      };
-    });
-    const { error: upsertError } = await supabase.from('questions').upsert(toSave);
-    if (upsertError) alert("Error saving questions: " + upsertError.message);
+    
+    // Schema now matches perfectly
+    const toSave = previewQuestions;
+
+    const { data, error: insertError } = await supabase.from('questions').insert(toSave).select();
+    if (insertError) alert("Error saving questions: " + insertError.message);
     else {
       alert("Questions saved to Supabase!");
-      onUpdate(previewQuestions);
+      if (data) {
+        onUpdate(sortQuestions([...questions, ...data]));
+      }
       setJsonInput("");
       setPreviewQuestions([]);
     }
@@ -606,7 +671,10 @@ function AdminDashboard({ questions, onUpdate, onExit }: { questions: Question[]
         </div>
 
         <div className="admin-section" style={{ display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
-          <h4>JSON Editor</h4>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <h4 style={{ margin: 0 }}>JSON Editor</h4>
+            <button className="btn btn-secondary" onClick={copyPrompt} style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>📋 Copy Prompt</button>
+          </div>
           <textarea 
             className="json-textarea" 
             placeholder="Paste JSON here..." 

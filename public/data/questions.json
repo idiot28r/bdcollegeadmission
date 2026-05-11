@@ -1,54 +1,34 @@
 [
   {
-    "id": "1",
-    "type": "mcq",
-    "institution": "NDC",
-    "year": "2023",
-    "subject": "Physics",
-    "topic": "Mechanics",
-    "question": "একটি বস্তুর ভর $m=5\\text{ kg}$ এবং এটি $v=10\\text{ ms}^{-1}$ বেগে চলছে। এর গতিশক্তি কত?",
-    "options": ["$250\\text{ J}$", "$500\\text{ J}$", "$100\\text{ J}$", "$50\\text{ J}$"],
-    "answerIndex": 0,
-    "explanation": "গতিশক্তি $E_k = \\frac{1}{2}mv^2 = \\frac{1}{2} \\times 5 \\times 10^2 = 250\\text{ J}$"
-  },
-  {
-    "id": "2",
-    "type": "mcq",
-    "institution": "HCC",
-    "year": "2022",
-    "subject": "Chemistry",
-    "topic": "Periodic Table",
-    "question": "নিচের কোনটি একটি হ্যালোজেন মৌল নয়?",
-    "options": ["Fluorine (F)", "Chlorine (Cl)", "Bromine (Br)", "Sodium (Na)"],
-    "answerIndex": 3,
-    "explanation": "Sodium (Na) একটি ক্ষার ধাতু, হ্যালোজেন নয়।"
-  },
-  {
-    "id": "3",
+    "id": "10",
     "type": "sq",
-    "institution": "SJHS",
+    "institution": "HCC",
     "year": "2023",
-    "subject": "Math",
-    "stimulus": "একটি বৃত্তের সমীকরণ $x^2 + y^2 - 4x - 6y + 9 = 0$।",
+    "subject": "Chemistry",
+    "stimulus": "$25^{\\circ}\\text{C}$ তাপমাত্রায় $A$ ও $B$ দুটি গ্যাসীয় পদার্থের বিক্রিয়ায় $C$ উৎপন্ন হয়।",
     "parts": [
-      { "label": "ক", "question": "বৃত্তটির কেন্দ্র নির্ণয় কর।", "mark": 2 },
-      { "label": "খ", "question": "বৃত্তটির ব্যাসার্ধ কত?", "mark": 2 },
-      { "label": "গ", "question": "বৃত্তটি $x$-অক্ষকে কোন বিন্দুতে ছেদ করে?", "mark": 3 },
-      { "label": "ঘ", "question": "বৃত্তটির ক্ষেত্রফল নির্ণয় কর।", "mark": 3 }
+      {
+        "label": "ক",
+        "question": "সক্রিয়ণ শক্তি কী?",
+        "mark": 1
+      },
+      {
+        "label": "খ",
+        "question": "তাপমাত্রা বৃদ্ধিতে বিক্রিয়ার হার বৃদ্ধি পায় কেন?",
+        "mark": 2
+      },
+      {
+        "label": "গ",
+        "question": "বিক্রিয়ার সাম্যাবস্থার ওপর চাপের প্রভাব আলোচনা কর।",
+        "mark": 3
+      },
+      {
+        "label": "ঘ",
+        "question": "লা-শাতেলীয়ার নীতি প্রয়োগ করে $C$ এর উৎপাদন বৃদ্ধির শর্তাবলী লিখ।",
+        "mark": 4
+      }
     ],
-    "solution": "<p><strong>ক)</strong> কেন্দ্র $(2, 3)$।</p><p><strong>খ)</strong> ব্যাসার্ধ $r = \\sqrt{2^2 + 3^2 - 9} = 2$।</p><p><strong>গ)</strong> $y=0$ বসালে, $x^2 - 4x + 9 = 0$। যেহেতু $D = 16 - 36 < 0$, তাই ছেদ করে না।</p><p><strong>ঘ)</strong> ক্ষেত্রফল $\\pi r^2 = 4\\pi$ বর্গ একক।</p>"
-  },
-  {
-    "id": "4",
-    "type": "mcq",
-    "institution": "NDC",
-    "year": "2023",
-    "subject": "Math",
-    "topic": "Trigonometry",
-    "question": "যদি $\\sin \\theta = \\frac{3}{5}$ হয়, তবে $\\tan \\theta$ এর মান কত? (যেখানে $0 < \\theta < \\frac{\\pi}{2}$)",
-    "options": ["$\\frac{4}{3}$", "$\\frac{3}{4}$", "$\\frac{4}{5}$", "$\\frac{5}{4}$"],
-    "answerIndex": 1,
-    "explanation": "$\\cos \\theta = \\sqrt{1 - \\sin^2 \\theta} = \\frac{4}{5}$। সুতরাং, $\\tan \\theta = \\frac{\\sin \\theta}{\\cos \\theta} = \\frac{3/5}{4/5} = \\frac{3}{4}$।"
+    "solution": "<p><strong>ক)</strong> কোনো বিক্রিয়া শুরু করার জন্য প্রয়োজনীয় ন্যূনতম শক্তিই হলো সক্রিয়ণ শক্তি।</p><p><strong>খ)</strong> তাপমাত্রা বাড়লে অণুগুলোর গতিশক্তি বাড়ে এবং কার্যকর সংঘর্ষের সংখ্যা বৃদ্ধি পায়।</p><p><strong>গ)</strong> চাপের প্রভাব নির্ভর করে বিক্রিয়ক ও উৎপাদের মোল সংখ্যার ওপর।</p><p><strong>ঘ)</strong> তাপমাত্রা কমালে এবং চাপ বাড়ালে বিক্রিয়ার হার বাড়তে পারে (বিক্রিয়ার প্রকৃতির ওপর ভিত্তি করে)।</p>"
   },
   {
     "id": "5",
@@ -64,47 +44,25 @@
       "I had seen him yesterday.",
       "I would see him yesterday."
     ],
-    "answerIndex": 1,
-    "explanation": "With past time markers like 'yesterday', Simple Past tense is used."
+    "explanation": "With past time markers like 'yesterday', Simple Past tense is used.",
+    "answer_index": 1
   },
   {
-    "id": "6",
-    "type": "sq",
-    "institution": "NDC",
-    "year": "2021",
-    "subject": "Physics",
-    "stimulus": "একটি উত্তল লেন্সের ফোকাস দূরত্ব $f = 10\\text{ cm}$। লেন্স থেকে $15\\text{ cm}$ দূরে একটি বস্তু রাখা হলো।",
-    "parts": [
-      { "label": "ক", "question": "লেন্সটির ক্ষমতা (Power) কত?", "mark": 2 },
-      { "label": "খ", "question": "বিম্বের দূরত্ব ($v$) নির্ণয় কর।", "mark": 3 },
-      { "label": "গ", "question": "বিম্বটি বাস্তব নাকি অবাস্তব?", "mark": 2 },
-      { "label": "ঘ", "question": "বিম্বের রৈখিক বিবর্ধন ($m$) কত?", "mark": 3 }
+    "id": "2",
+    "type": "mcq",
+    "institution": "HCC",
+    "year": "2022",
+    "subject": "Chemistry",
+    "topic": "Periodic Table",
+    "question": "নিচের কোনটি একটি হ্যালোজেন মৌল নয়?",
+    "options": [
+      "Fluorine (F)",
+      "Chlorine (Cl)",
+      "Bromine (Br)",
+      "Sodium (Na)"
     ],
-    "solution": "<p><strong>ক)</strong> $P = \\frac{1}{f} = \\frac{1}{0.1} = 10$ Dioptre (D)।</p><p><strong>খ)</strong> $\\frac{1}{v} = \\frac{1}{f} - \\frac{1}{u} = \\frac{1}{10} - \\frac{1}{15} = \\frac{3-2}{30} = \\frac{1}{30} \\implies v = 30\\text{ cm}$।</p><p><strong>গ)</strong> যেহেতু $v$ ধনাত্মক, বিম্বটি বাস্তব।</p><p><strong>ঘ)</strong> $m = |-\\frac{v}{u}| = \\frac{30}{15} = 2$।</p>"
-  },
-  {
-    "id": "7",
-    "type": "mcq",
-    "institution": "SJHS",
-    "year": "2023",
-    "subject": "Biology",
-    "topic": "Genetics",
-    "question": "বংশগতিবিদ্যার জনক কে?",
-    "options": ["Charles Darwin", "Gregor Johann Mendel", "Robert Hooke", "Lamarck"],
-    "answerIndex": 1,
-    "explanation": "গ্রেগর জোহান মেন্ডেলকে বংশগতিবিদ্যার জনক বলা হয়।"
-  },
-  {
-    "id": "8",
-    "type": "mcq",
-    "institution": "NDC",
-    "year": "2023",
-    "subject": "GK",
-    "topic": "Bangladesh",
-    "question": "বাংলাদেশের সংবিধান কার্যকর হয় কোন তারিখ থেকে?",
-    "options": ["১৬ ডিসেম্বর ১৯৭২", "২৬ মার্চ ১৯৭২", "১০ এপ্রিল ১৯৭২", "৭ নভেম্বর ১৯৭২"],
-    "answerIndex": 0,
-    "explanation": "বাংলাদেশের সংবিধান ১৬ ডিসেম্বর ১৯৭২ থেকে কার্যকর হয়।"
+    "explanation": "Sodium (Na) একটি ক্ষার ধাতু, হ্যালোজেন নয়।",
+    "answer_index": 3
   },
   {
     "id": "9",
@@ -114,23 +72,1503 @@
     "subject": "Math",
     "topic": "Calculus",
     "question": "$\\frac{d}{dx}(\\sin^2 x)$ এর মান কত?",
-    "options": ["$\\cos^2 x$", "$\\sin 2x$", "$2\\sin x$", "$2\\cos x$"],
-    "answerIndex": 1,
-    "explanation": "$\\frac{d}{dx}(\\sin^2 x) = 2\\sin x \\frac{d}{dx}(\\sin x) = 2\\sin x \\cos x = \\sin 2x$।"
+    "options": [
+      "$\\cos^2 x$",
+      "$\\sin 2x$",
+      "$2\\sin x$",
+      "$2\\cos x$"
+    ],
+    "explanation": "$\\frac{d}{dx}(\\sin^2 x) = 2\\sin x \\frac{d}{dx}(\\sin x) = 2\\sin x \\cos x = \\sin 2x$।",
+    "answer_index": 1
   },
   {
-    "id": "10",
+    "id": "00000052",
     "type": "sq",
-    "institution": "HCC",
-    "year": "2023",
-    "subject": "Chemistry",
-    "stimulus": "$25^{\\circ}\\text{C}$ তাপমাত্রায় $A$ ও $B$ দুটি গ্যাসীয় পদার্থের বিক্রিয়ায় $C$ উৎপন্ন হয়।",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Biology",
+    "topic": "Cell Biology",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
     "parts": [
-      { "label": "ক", "question": "সক্রিয়ণ শক্তি কী?", "mark": 1 },
-      { "label": "খ", "question": "তাপমাত্রা বৃদ্ধিতে বিক্রিয়ার হার বৃদ্ধি পায় কেন?", "mark": 2 },
-      { "label": "গ", "question": "বিক্রিয়ার সাম্যাবস্থার ওপর চাপের প্রভাব আলোচনা কর।", "mark": 3 },
-      { "label": "ঘ", "question": "লা-শাতেলীয়ার নীতি প্রয়োগ করে $C$ এর উৎপাদন বৃদ্ধির শর্তাবলী লিখ।", "mark": 4 }
+      {
+        "mark": 2,
+        "label": "১১",
+        "question": "---- উভয়ের রয়েছে ইলেকট্রন ট্রান্সপোর্ট সিস্টেম।"
+      }
     ],
-    "solution": "<p><strong>ক)</strong> কোনো বিক্রিয়া শুরু করার জন্য প্রয়োজনীয় ন্যূনতম শক্তিই হলো সক্রিয়ণ শক্তি।</p><p><strong>খ)</strong> তাপমাত্রা বাড়লে অণুগুলোর গতিশক্তি বাড়ে এবং কার্যকর সংঘর্ষের সংখ্যা বৃদ্ধি পায়।</p><p><strong>গ)</strong> চাপের প্রভাব নির্ভর করে বিক্রিয়ক ও উৎপাদের মোল সংখ্যার ওপর।</p><p><strong>ঘ)</strong> তাপমাত্রা কমালে এবং চাপ বাড়ালে বিক্রিয়ার হার বাড়তে পারে (বিক্রিয়ার প্রকৃতির ওপর ভিত্তি করে)।</p>"
+    "solution": "<p><strong>১১)</strong> <strong>মাইটোকন্ড্রিয়া ও ক্লোরোপ্লাস্ট</strong> উভয়ের ইলেকট্রন ট্রান্সপোর্ট সিস্টেম (ETS) রয়েছে।</p>",
+    "hidden": false,
+    "serial": "11"
+  },
+  {
+    "id": "00000053",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Biology",
+    "topic": "Human Body",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "১২",
+        "question": "বৃক্ক মানবদেহের ---- নিয়ন্ত্রণ করে?"
+      }
+    ],
+    "solution": "<p><strong>১২)</strong> বৃক্ক মানবদেহের <strong>অসমোরেগুলেশন বা পানির ভারসাম্য</strong> নিয়ন্ত্রণ করে।</p>",
+    "hidden": false,
+    "serial": "12"
+  },
+  {
+    "id": "00000059",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Biology",
+    "topic": "Cell Division",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "১৮",
+        "question": "অ্যানাফেজ পর্যায়ের শেষে ---- বৃদ্ধি পেতে থাকে?"
+      }
+    ],
+    "solution": "<p><strong>১৮)</strong> অপত্য ক্রোমোজোমের মধ্যবর্তী দূরত্ব বৃদ্ধি পেতে থাকে।</p>",
+    "hidden": false,
+    "serial": "18"
+  },
+  {
+    "id": "00000022",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Biology",
+    "topic": "Botany",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "২১",
+        "question": "উদ্ভিদের রঙিন ফুল পাতা ---- এতে পাওয়া যায়।"
+      }
+    ],
+    "solution": "<p><strong>২১)</strong> উদ্ভিদের রঙিন ফুল ও পাতায় <strong>ক্রোমোপ্লাস্ট</strong> পাওয়া যায়।</p>",
+    "hidden": false,
+    "serial": "21"
+  },
+  {
+    "id": "00000023",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Biology",
+    "topic": "Zoology",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "২২",
+        "question": "একটি ---- মাছ প্রজনন ঋতুতে একটি ডিম পাড়ে।"
+      }
+    ],
+    "solution": "<p><strong>২২)</strong> সাধারণত <strong>হাঙর</strong> বা নির্দিষ্ট কিছু প্রজাতির সামুদ্রিক মাছ (তথ্যসূত্রভেদে ভিন্ন হতে পারে)।</p>",
+    "hidden": false,
+    "serial": "22"
+  },
+  {
+    "id": "00000027",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Biology",
+    "topic": "Botany",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "২৬",
+        "question": "রঙিন পাতা, ফুল ইত্যাদি কীসের জন্য হয়ে থাকে?"
+      }
+    ],
+    "solution": "<p><strong>২৬)</strong> পরাগায়নের জন্য <strong>কীটপতঙ্গকে আকৃষ্ট</strong> করতে।</p>",
+    "hidden": false,
+    "serial": "26"
+  },
+  {
+    "id": "00000030",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Biology",
+    "topic": "Zoology",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "২৯",
+        "question": "কোন মাছ বছরে প্রায় ৩ কোটি প্রজনন করে?"
+      }
+    ],
+    "solution": "<p><strong>২৯)</strong> সানফিশ (Mola mola)।</p>",
+    "hidden": false,
+    "serial": "29"
+  },
+  {
+    "id": "00000050",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Chemistry",
+    "topic": "Organic Chemistry",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৯",
+        "question": "$CH_4$ থেকে $CHCl_3$ বিক্রিয়া লিখ।"
+      }
+    ],
+    "solution": "<p><strong>৯)</strong> $CH_4 + 3Cl_2 \\xrightarrow{uv} CHCl_3 + 3HCl$</p>",
+    "hidden": false,
+    "serial": "9"
+  },
+  {
+    "id": "00000057",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Chemistry",
+    "topic": "Organic Chemistry",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "১৬",
+        "question": "$C_2H_5OH \\xrightarrow{H_2SO_4} C_2H_4 + H_2O, \\Delta H$ কত?"
+      }
+    ],
+    "solution": "<p><strong>১৬)</strong> এটি একটি তাপহারী বিক্রিয়া, তাই $\\Delta H$ ধনাত্মক ($+$)। নির্দিষ্ট মান সাধারণত $+44 \\text{ kJ/mol}$ এর কাছাকাছি হয়।</p>",
+    "hidden": false,
+    "serial": "16"
+  },
+  {
+    "id": "00000060",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Chemistry",
+    "topic": "Stoichiometry",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "১৯",
+        "question": "$25\\text{gm } ZnCO_3$ কত $ZnO$ পাওয়া যায়?"
+      }
+    ],
+    "solution": "<p><strong>১৯)</strong> $ZnCO_3 \\rightarrow ZnO + CO_2$। <br> $ZnCO_3$ এর আণবিক ভর = $65.4+12+(16 \\times 3) = 125.4 \\text{ g}$। <br> $ZnO$ এর আণবিক ভর = $65.4+16 = 81.4 \\text{ g}$। <br> $125.4\\text{g}$ থেকে পাওয়া যায় $81.4\\text{g}$। <br> $25\\text{g}$ থেকে পাওয়া যায় $\\frac{81.4 \\times 25}{125.4} \\approx 16.23 \\text{ g}$।</p>",
+    "hidden": false,
+    "serial": "19"
+  },
+  {
+    "id": "00000061",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Chemistry",
+    "topic": "Organic Chemistry",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "২০",
+        "question": "$CH_3CH_2COONa \\xrightarrow[\\Delta]{CaO} A \\xrightarrow[hv]{Cl_2} B \\xrightarrow{KOH} C$. $A = ? \\& C = ?$"
+      }
+    ],
+    "solution": "<p><strong>২০)</strong> $A$ হলো ইথেন ($C_2H_6$) [ডিকার্বক্সিলেশন]। $B$ হলো ইথাইল ক্লোরাইড ($C_2H_5Cl$)। $C$ হলো ইথানল ($C_2H_5OH$) [জলীয় KOH হলে] অথবা ইথিন ($C_2H_4$) [অ্যালকোহলীয় KOH হলে]।</p>",
+    "hidden": false,
+    "serial": "20"
+  },
+  {
+    "id": "00000025",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Chemistry",
+    "topic": "Organic Chemistry",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "২৪",
+        "question": "$\\\\text{Ethanol} \\\\xrightarrow{\\\\text{গাঢ় } H_2SO_4} \\\\text{Ethene} + H_2O, \\\\Delta H = ?$"
+      }
+    ],
+    "solution": "<p><strong>২৪)</strong> এটি একটি তাপহারী (Endothermic) বিক্রিয়া। $\\Delta H$ এর মান প্রায় $+44.5 \\text{ kJ/mol}$।</p>",
+    "hidden": false,
+    "serial": "24"
+  },
+  {
+    "id": "00000033",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Chemistry",
+    "topic": "Atomic Structure",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৩২",
+        "question": "$He, K^+, N^{3-}$ এর পারমাণবিক ব্যাসার্ধের ক্রম লিখ?"
+      }
+    ],
+    "solution": "<p><strong>৩২)</strong> $K^+ < He < N^{3-}$।</p>",
+    "hidden": false,
+    "serial": "32"
+  },
+  {
+    "id": "00000038",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Chemistry",
+    "topic": "Stoichiometry",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৩৭",
+        "question": "25টি খাতায় 1টি করে বৃত্ত ভরাট করতে 85g গ্রাফাইট লাগে। তাহলে 25টি খাতার প্রতিটি 2টি করে বৃত্ত ভরাট করলে কত গ্রাম কার্বন লাগবে?"
+      }
+    ],
+    "solution": "<p><strong>৩৭)</strong> গ্রাফাইট কার্বনের একটি রূপভেদ। ১টি বৃত্তের জন্য লাগে ৮৫ গ্রাম, তাহলে ২টির জন্য লাগবে $85 \\times 2 = 170 \\text{ g}$ কার্বন।</p>",
+    "hidden": false,
+    "serial": "37"
+  },
+  {
+    "id": "00000045",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "English",
+    "topic": "Grammar",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৪",
+        "question": "Write correct sentence - We are interested ------- (see) this film."
+      }
+    ],
+    "solution": "<p><strong>৪)</strong> We are interested <strong>in seeing</strong> this film.</p>",
+    "hidden": false,
+    "serial": "4"
+  },
+  {
+    "id": "00000034",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "English",
+    "topic": "Parts of Speech",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৩৩",
+        "question": "The rolling stone gathers no moss. Here rolling is a -- / Finite verb."
+      }
+    ],
+    "solution": "<p><strong>৩৩)</strong> Rolling এখানে একটি <strong>Participle</strong> (Adjective হিসেবে কাজ করছে)। এটি Finite verb নয়।</p>",
+    "hidden": false,
+    "serial": "33"
+  },
+  {
+    "id": "00000040",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "English",
+    "topic": "Literature",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৩৯",
+        "question": "'Time, old man' is a/an ----."
+      }
+    ],
+    "solution": "<p><strong>৩৯)</strong> এটি একটি <strong>Personification</strong> (কবিতার চরণ)।</p>",
+    "hidden": false,
+    "serial": "39"
+  },
+  {
+    "id": "00000043",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "GK",
+    "topic": "Literature",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "২",
+        "question": "\"গৌড়ীয় ব্যাকরণ\" কার লেখা?"
+      }
+    ],
+    "solution": "<p><strong>২)</strong> রাজা রামমোহন রায়।</p>",
+    "hidden": false,
+    "serial": "2"
+  },
+  {
+    "id": "00000044",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "GK",
+    "topic": "Literature",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৩",
+        "question": "\"কল্পনা\" কাব্য থেকে কোন কবিতা নেওয়া হয়েছে?"
+      }
+    ],
+    "solution": "<p><strong>৩)</strong> ঝিঙেফুল (অথবা পাঠ্যবই অনুযায়ী সুনির্দিষ্ট কবিতা)।</p>",
+    "hidden": false,
+    "serial": "3"
+  },
+  {
+    "id": "00000054",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "GK",
+    "topic": "Literature",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "১৩",
+        "question": "\"ময়মনসিংহ গীতিকা\" কে সংগ্রহ করে?"
+      }
+    ],
+    "solution": "<p><strong>১৩)</strong> চন্দ্রকুমার দে (সম্পাদনা করেন দীনেশচন্দ্র সেন)।</p>",
+    "hidden": false,
+    "serial": "13"
+  },
+  {
+    "id": "00000055",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "GK",
+    "topic": "Bangla Grammar",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "১৪",
+        "question": "মৌলিক স্বরধ্বনি কয়টি?"
+      }
+    ],
+    "solution": "<p><strong>১৪)</strong> ৭টি।</p>",
+    "hidden": false,
+    "serial": "14"
+  },
+  {
+    "id": "00000035",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "GK",
+    "topic": "Geography",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৩৪",
+        "question": "What are the four ethnic groups of Srilanka ----?"
+      }
+    ],
+    "solution": "<p><strong>৩৪)</strong> Sinhalese, Tamils, Moors, and Burghers.</p>",
+    "hidden": false,
+    "serial": "34"
+  },
+  {
+    "id": "00000037",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "GK",
+    "topic": "Literature",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৩৬",
+        "question": "বাংলা সাহিত্যের চলিত রীতির ধারা কোন পত্রিকা থেকে নেওয়া হয়েছে?"
+      }
+    ],
+    "solution": "<p><strong>৩৬)</strong> প্রমথ চৌধুরী সম্পাদিত <strong>সবুজপত্র</strong> পত্রিকা।</p>",
+    "hidden": false,
+    "serial": "36"
+  },
+  {
+    "id": "00000042",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Functions",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": "$f(x) = \\frac{x}{|x|}$",
+    "parts": [
+      {
+        "mark": 2,
+        "label": "১",
+        "question": "$f(x) = \\frac{x}{|x|}$ হলে রেঞ্জ কত?"
+      }
+    ],
+    "solution": "<p><strong>১)</strong> $f(x) = \\frac{x}{|x|}$ ফাংশনটির রেঞ্জ হলো $\\{1, -1\\}$। কারণ $x > 0$ হলে $f(x) = 1$ এবং $x < 0$ হলে $f(x) = -1$।</p>",
+    "hidden": false,
+    "serial": "1"
+  },
+  {
+    "id": "00000048",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Geometry",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৭",
+        "question": "বৃত্তের অধিচাপ --- ও উপচাপে --- কোন।"
+      }
+    ],
+    "solution": "<p><strong>৭)</strong> বৃত্তের অধিচাপে <strong>সূক্ষ্মকোণ</strong> ও উপচাপে <strong>স্থূলকোণ</strong> থাকে।</p>",
+    "hidden": false,
+    "serial": "7"
+  },
+  {
+    "id": "00000049",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Algebra",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৮",
+        "question": "$ax^2 + bx + c = 0$ এখানে নিশ্চায়ক কোনটি?"
+      }
+    ],
+    "solution": "<p><strong>৮)</strong> নিশ্চায়ক হলো $D = b^2 - 4ac$।</p>",
+    "hidden": false,
+    "serial": "8"
+  },
+  {
+    "id": "00000051",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Number Theory",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "১০",
+        "question": "চারটি ক্রমিক স্বাভাবিক সংখ্যা গুণ করে গুণফলের সাথে ১ যোগ করলে সংখ্যাটি কী হবে?"
+      }
+    ],
+    "solution": "<p><strong>১০)</strong> সংখ্যাটি একটি <strong>পূর্ণবর্গ সংখ্যা</strong> হবে।</p>",
+    "hidden": false,
+    "serial": "10"
+  },
+  {
+    "id": "00000056",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Algebra",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "১৫",
+        "question": "$(k - \\frac{x}{3})^7$ এ $k^3$ এর সহগ 560 হলে $x = ?$ "
+      }
+    ],
+    "solution": "<p><strong>১৫)</strong> দ্বিপদী বিস্তৃতি অনুযায়ী, $k^3$ পদটি হলো $^7C_4 \\cdot k^3 \\cdot (-\\frac{x}{3})^4 = 35 \\cdot k^3 \\cdot \\frac{x^4}{81}$। <br> শর্তমতে, $35 \\cdot \\frac{x^4}{81} = 560 \\implies x^4 = \\frac{560 \\cdot 81}{35} = 16 \\cdot 81 = 1296$। <br> সুতরাং, $x = \\pm 6$।</p>",
+    "hidden": false,
+    "serial": "15"
+  },
+  {
+    "id": "00000058",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Trigonometry",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "১৭",
+        "question": "একটি বৃত্তের ব্যাসার্ধ 12 সে.মি. এবং বৃত্তের দৈর্ঘ্য ৪ সে.মি. হলে $\\theta = ?$"
+      }
+    ],
+    "solution": "<p><strong>১৭)</strong> সূত্র $s = r\\theta$ অনুযায়ী, $\\theta = \\frac{s}{r} = \\frac{8}{12} = \\frac{2}{3}$ রেডিয়ান।</p>",
+    "hidden": false,
+    "serial": "17"
+  },
+  {
+    "id": "00000026",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Geometry",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "২৫",
+        "question": "প্রিজমের বাহুগুলোর দৈর্ঘ্য ৩, ৪, ৫ সে.মি. এবং উচ্চতা ৮ সে.মি. হলে আয়তন কত?"
+      }
+    ],
+    "solution": "<p><strong>২৫)</strong> ভূমি একটি সমকোণী ত্রিভুজ যার ক্ষেত্রফল $A = \\frac{1}{2} \\times 3 \\times 4 = 6 \\text{ cm}^2$। আয়তন $V = A \\times h = 6 \\times 8 = 48 \\text{ cm}^3$।</p>",
+    "hidden": false,
+    "serial": "25"
+  },
+  {
+    "id": "00000031",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Arithmetic",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৩০",
+        "question": "5.23457 ভগ্নাংশ আকারে প্রকাশ করো?"
+      }
+    ],
+    "solution": "<p><strong>৩০)</strong> $\\frac{523457}{100000}$।</p>",
+    "hidden": false,
+    "serial": "30"
+  },
+  {
+    "id": "00000032",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Arithmetic",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৩১",
+        "question": "$N > 0, 1 \\le 0 < 10 [n \\in Z]$ হলে $N$ এর বৈজ্ঞানিক রূপ?"
+      }
+    ],
+    "solution": "<p><strong>৩১)</strong> $N = a \\times 10^n$, যেখানে $1 \\le a < 10$।</p>",
+    "hidden": false,
+    "serial": "31"
+  },
+  {
+    "id": "00000036",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Geometry",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৩৫",
+        "question": "পিরামিডের দৈর্ঘ্য ৪,৬,৮ এবং উচ্চতা ৪। আয়তন কত?"
+      }
+    ],
+    "solution": "<p><strong>৩৫)</strong> ভূমির ক্ষেত্রফল (যদি বিষমবাহু ধরি) বের করে সূত্র $V = \\frac{1}{3} \\times \\text{Area} \\times h$ ব্যবহার করতে হবে।</p>",
+    "hidden": false,
+    "serial": "35"
+  },
+  {
+    "id": "00000041",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Algebra",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৪০",
+        "question": "$ax^2 + bx + c$ এর মূলদ্বয় অসমান, অমূলদ ও অবাস্তব হবে যদি ---?"
+      }
+    ],
+    "solution": "<p><strong>৪০)</strong> যদি নিশ্চায়ক $D = b^2 - 4ac < 0$ হয়।</p>",
+    "hidden": false,
+    "serial": "40"
+  },
+  {
+    "id": "00000046",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Physics",
+    "topic": "Waves and Sound",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৫",
+        "question": "শব্দের তীব্রতার একক লিখ?"
+      }
+    ],
+    "solution": "<p><strong>৫)</strong> শব্দের তীব্রতার একক হলো $\\text{Wm}^{-2}$।</p>",
+    "hidden": false,
+    "serial": "5"
+  },
+  {
+    "id": "00000047",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Physics",
+    "topic": "Light",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৬",
+        "question": "অবতল দর্পণে বিম্ব বক্রতার কেন্দ্রে থাকলে বিবর্ধন কত?"
+      }
+    ],
+    "solution": "<p><strong>৬)</strong> বিবর্ধন $m = 1$ (বিম্বের আকার ও লক্ষ্যবস্তুর আকার সমান)।</p>",
+    "hidden": false,
+    "serial": "6"
+  },
+  {
+    "id": "00000024",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Physics",
+    "topic": "Mechanics",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "২৩",
+        "question": "মুক্তভাবে পতনশীল বস্তুর ১ম, ২য়, ৩য় সেকেন্ডে অতিক্রান্ত দূরত্বের অনুপাত কত?"
+      }
+    ],
+    "solution": "<p><strong>২৩)</strong> গ্যালিলিও-র সূত্রমতে, স্থির অবস্থান থেকে মুক্তভাবে পড়ন্ত বস্তুর অতিক্রান্ত দূরত্ব সময়ের বর্গের সমানুপাতিক ($h \\propto t^2$)। ফলে অনুপাতটি হবে $1^2 : 2^2 : 3^2 = 1 : 4 : 9$। (যদি নির্দিষ্ট তম সেকেন্ডে বলা হয়, তবে $1 : 3 : 5$)।</p>",
+    "hidden": false,
+    "serial": "23"
+  },
+  {
+    "id": "00000028",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Physics",
+    "topic": "Mechanics",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "২৭",
+        "question": "ভরবেগ P হলে গতিশক্তি দ্বিগুণ করা হলে নতুন ভরবেগ কত?"
+      }
+    ],
+    "solution": "<p><strong>২৭)</strong> আমরা জানি, $E_k = \\frac{P^2}{2m}$। গতিশক্তি $2E_k$ হলে, $P' = \\sqrt{2m(2E_k)} = \\sqrt{2}P$।</p>",
+    "hidden": false,
+    "serial": "27"
+  },
+  {
+    "id": "00000029",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Physics",
+    "topic": "Light",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "২৮",
+        "question": "লক্ষ্যবস্তু বক্রতার কেন্দ্রে রাখলে $m = ?$"
+      }
+    ],
+    "solution": "<p><strong>২৮)</strong> বিবর্ধন $m = 1$।</p>",
+    "hidden": false,
+    "serial": "28"
+  },
+  {
+    "id": "00000039",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Physics",
+    "topic": "Mechanics",
+    "question": null,
+    "options": null,
+    "answer_index": null,
+    "explanation": null,
+    "stimulus": null,
+    "parts": [
+      {
+        "mark": 2,
+        "label": "৩৮",
+        "question": "একটি বস্তু হতে $m_1$ ও $m_2$ ভরের দুটি বস্তু ছিটকে $V_1$ ও $V_2$ বেগে আলাদা হলে $\\frac{V_1}{V_2} = ?$"
+      }
+    ],
+    "solution": "<p><strong>৩৮)</strong> ভরবেগের সংরক্ষণ সূত্রানুসারে, $m_1 V_1 + m_2 V_2 = 0 \\implies \\frac{V_1}{V_2} = -\\frac{m_2}{m_1}$।</p>",
+    "hidden": false,
+    "serial": "38"
+  },
+  {
+    "id": "8",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2023",
+    "subject": "GK",
+    "topic": "Bangladesh",
+    "question": "বাংলাদেশের সংবিধান কার্যকর হয় কোন তারিখ থেকে?",
+    "options": [
+      "১৬ ডিসেম্বর ১৯৭২",
+      "২৬ মার্চ ১৯৭২",
+      "১০ এপ্রিল ১৯৭২",
+      "৭ নভেম্বর ১৯৭২"
+    ],
+    "explanation": "বাংলাদেশের সংবিধান ১৬ ডিসেম্বর ১৯৭২ থেকে কার্যকর হয়।",
+    "answer_index": 0
+  },
+  {
+    "id": "4",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2023",
+    "subject": "Math",
+    "topic": "Trigonometry",
+    "question": "যদি $\\sin \\theta = \\frac{3}{5}$ হয়, তবে $\\tan \\theta$ এর মান কত? (যেখানে $0 < \\theta < \\frac{\\pi}{2}$)",
+    "options": [
+      "$\\frac{4}{3}$",
+      "$\\frac{3}{4}$",
+      "$\\frac{4}{5}$",
+      "$\\frac{5}{4}$"
+    ],
+    "explanation": "$\\cos \\theta = \\sqrt{1 - \\sin^2 \\theta} = \\frac{4}{5}$। সুতরাং, $\\tan \\theta = \\frac{\\sin \\theta}{\\cos \\theta} = \\frac{3/5}{4/5} = \\frac{3}{4}$।",
+    "answer_index": 1
+  },
+  {
+    "id": "1",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2023",
+    "subject": "Physics",
+    "topic": "Mechanics",
+    "question": "একটি বস্তুর ভর $m=5\\text{ kg}$ এবং এটি $v=10\\text{ ms}^{-1}$ বেগে চলছে। এর গতিশক্তি কত?",
+    "options": [
+      "$250\\text{ J}$",
+      "$500\\text{ J}$",
+      "$100\\text{ J}$",
+      "$50\\text{ J}$"
+    ],
+    "explanation": "গতিশক্তি $E_k = \\frac{1}{2}mv^2 = \\frac{1}{2} \\times 5 \\times 10^2 = 250\\text{ J}$",
+    "answer_index": 0
+  },
+  {
+    "id": "6",
+    "type": "sq",
+    "institution": "NDC",
+    "year": "2021",
+    "subject": "Physics",
+    "stimulus": "একটি উত্তল লেন্সের ফোকাস দূরত্ব $f = 10\\text{ cm}$। লেন্স থেকে $15\\text{ cm}$ দূরে একটি বস্তু রাখা হলো।",
+    "parts": [
+      {
+        "label": "ক",
+        "question": "লেন্সটির ক্ষমতা (Power) কত?",
+        "mark": 2
+      },
+      {
+        "label": "খ",
+        "question": "বিম্বের দূরত্ব ($v$) নির্ণয় কর।",
+        "mark": 3
+      },
+      {
+        "label": "গ",
+        "question": "বিম্বটি বাস্তব নাকি অবাস্তব?",
+        "mark": 2
+      },
+      {
+        "label": "ঘ",
+        "question": "বিম্বের রৈখিক বিবর্ধন ($m$) কত?",
+        "mark": 3
+      }
+    ],
+    "solution": "<p><strong>ক)</strong> $P = \\frac{1}{f} = \\frac{1}{0.1} = 10$ Dioptre (D)।</p><p><strong>খ)</strong> $\\frac{1}{v} = \\frac{1}{f} - \\frac{1}{u} = \\frac{1}{10} - \\frac{1}{15} = \\frac{3-2}{30} = \\frac{1}{30} \\implies v = 30\\text{ cm}$।</p><p><strong>গ)</strong> যেহেতু $v$ ধনাত্মক, বিম্বটি বাস্তব।</p><p><strong>ঘ)</strong> $m = |-\\frac{v}{u}| = \\frac{30}{15} = 2$।</p>"
+  },
+  {
+    "id": "00000013",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Chemistry",
+    "topic": "Elements",
+    "question": "টিন এর প্রতীক কি?",
+    "options": [
+      "Al",
+      "Cr",
+      "Sn",
+      "Cu"
+    ],
+    "answer_index": 2,
+    "explanation": "টিনের ল্যাটিন নাম Stannum, তাই এর রাসায়নিক প্রতীক Sn।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "1"
+  },
+  {
+    "id": "00000003",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Chemistry",
+    "topic": "Chemical Bonding",
+    "question": "নিচের কোন মৌলটি শুধুমাত্র সমযোজী যৌগ গঠন করে?",
+    "options": [
+      "সোডিয়াম",
+      "ম্যাগনেসিয়াম",
+      "অক্সিজেন",
+      "কার্বন"
+    ],
+    "answer_index": 3,
+    "explanation": "কার্বন (C) সাধারণত আয়নিক যৌগ গঠন করে না কারণ এর শেষ কক্ষপথে ৪টি ইলেকট্রন থাকে। এটি অন্যান্য পরমাণুর সাথে ইলেকট্রন শেয়ার করে শুধুমাত্র সমযোজী যৌগ গঠন করে।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "2"
+  },
+  {
+    "id": "00000004",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Chemistry",
+    "topic": "Oxidation and Reduction",
+    "question": "$Zn + Cu^{2+} = Zn^{2+} + Cu$ বিক্রিয়াতে কোনটি বিজারক হিসেবে কাজ করে?",
+    "options": [
+      "$Cu^{2+}$",
+      "$Zn$",
+      "$Zn^{2+}$",
+      "$Cu$"
+    ],
+    "answer_index": 1,
+    "explanation": "যে পদার্থ ইলেকট্রন ত্যাগ করে জারিত হয় তাকে বিজারক বলে। এখানে জিংক (Zn) ২টি ইলেকট্রন ত্যাগ করে $Zn^{2+}$ আয়নে পরিণত হয়েছে ($Zn \\rightarrow Zn^{2+} + 2e^-$), তাই Zn হলো বিজারক।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "3"
+  },
+  {
+    "id": "00000014",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Chemistry",
+    "topic": "Atomic Structure",
+    "question": "$_{19}^{39}K^+$ আয়নে ইলেকট্রন সংখ্যা কত?",
+    "options": [
+      "18",
+      "19",
+      "20",
+      "39"
+    ],
+    "answer_index": 0,
+    "explanation": "পটাশিয়ামের (K) পারমাণবিক সংখ্যা 19, অর্থাৎ নিরপেক্ষ অবস্থায় 19টি ইলেকট্রন থাকে। $K^+$ আয়নটি একটি ইলেকট্রন ত্যাগের মাধ্যমে গঠিত হয়, তাই এতে ইলেকট্রন সংখ্যা $19-1=18$।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "3"
+  },
+  {
+    "id": "00000005",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Chemistry",
+    "topic": "Chemical Reactions",
+    "question": "রাসায়নিক বিক্রিয়া সংঘটনের জন্য কোনটি অত্যাবশ্যক?",
+    "options": [
+      "তাপ",
+      "আলোক",
+      "চাপ",
+      "সংস্পর্শ"
+    ],
+    "answer_index": 3,
+    "explanation": "রাসায়নিক বিক্রিয়া ঘটার প্রধান শর্ত হলো বিক্রিয়ক পদার্থগুলোকে পরস্পরের সংস্পর্শে আসতে হবে। তাপ, আলো বা চাপ কিছু নির্দিষ্ট বিক্রিয়ার জন্য প্রভাবক হিসেবে কাজ করলেও সংস্পর্শ অত্যাবশ্যক।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "4"
+  },
+  {
+    "id": "00000008",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Math",
+    "topic": "Sets",
+    "question": "$A=\\{0, 1, 2\\}$ এবং $B=\\{-1, 0, 1\\}$ হলে নিচের কোনটি $A \\cup B$ এর সঠিক সমাধান?",
+    "options": [
+      "$\\{0, 1\\}$",
+      "$\\{0, 1, 2\\}$",
+      "$\\{-1, 0, 1\\}$",
+      "$\\{-1, 0, 1, 2\\}$"
+    ],
+    "answer_index": 3,
+    "explanation": "$A \\cup B$ (A ইউনিয়ন B) হলো A ও B সেটের সকল উপাদানের সমন্বয়ে গঠিত সেট। সুতরাং, $A \\cup B = \\{0, 1, 2\\} \\cup \\{-1, 0, 1\\} = \\{-1, 0, 1, 2\\}$।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "2"
+  },
+  {
+    "id": "00000011",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Math",
+    "topic": "Geometry",
+    "question": "নিচের কোনটি বৃত্তের পরিধির মান নির্দেশ করে?",
+    "options": [
+      "$4\\pi r^2$",
+      "$\\pi r^2$",
+      "$2\\pi r$",
+      "$2\\pi r^2$"
+    ],
+    "answer_index": 2,
+    "explanation": "$r$ ব্যাসার্ধ বিশিষ্ট একটি বৃত্তের পরিধির সূত্র হলো $2\\pi r$।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "2"
+  },
+  {
+    "id": "00000007",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Math",
+    "topic": "Logarithms",
+    "question": "নিচের কোনটি $\\log_4 64$ এর সঠিক মান?",
+    "options": [
+      "8",
+      "4",
+      "3",
+      "2"
+    ],
+    "answer_index": 2,
+    "explanation": "$\\log_4 64 = \\log_4 (4^3) = 3 \\log_4 4 = 3 \\times 1 = 3$।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "5"
+  },
+  {
+    "id": "00000017",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Math",
+    "topic": "Algebra",
+    "question": "$\\frac{y}{p} + p = \\frac{y}{q} + q$ হলে, $y$ এর মান কত?",
+    "options": [
+      "$pq$",
+      "$p-q$",
+      "$\\frac{pq}{p-q}$",
+      "$\\frac{pq}{p+q}$"
+    ],
+    "answer_index": 0,
+    "explanation": "$\\frac{y}{p} - \\frac{y}{q} = q - p \\Rightarrow \\frac{qy - py}{pq} = q - p \\Rightarrow y(\\frac{q - p}{pq}) = q - p \\Rightarrow y = pq \\frac{q-p}{q-p} = pq$ (যেখানে $p \\neq q$)।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "5"
+  },
+  {
+    "id": "00000006",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Math",
+    "topic": "Absolute Value",
+    "question": "$P=-3$ হলে $|P|$ এর সঠিক মান কত?",
+    "options": [
+      "-3",
+      "0",
+      "$\\pm 3$",
+      "3"
+    ],
+    "answer_index": 3,
+    "explanation": "পরমমান (Absolute value) দ্বারা শুধুমাত্র মান নির্দেশ করা হয়, তাই এটি সর্বদা ধনাত্মক। সুতরাং, $|P| = |-3| = 3$।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "7"
+  },
+  {
+    "id": "00000010",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Physics",
+    "topic": "Heat",
+    "question": "পানির আপেক্ষিক তাপমাত্রা কত?",
+    "options": [
+      "$800\\text{ Jkg}^{-1}\\text{K}^{-1}$",
+      "$4200\\text{ Jkg}^{-1}\\text{K}^{-1}$",
+      "$4000\\text{ Jkg}^{-1}\\text{K}^{-1}$",
+      "$800\\text{ Jkg}^{-1}\\text{K}^{-1}$"
+    ],
+    "answer_index": 1,
+    "explanation": "পানির আপেক্ষিক তাপ ৪২00 $\\text{Jkg}^{-1}\\text{K}^{-1}$। অর্থাৎ, ১ কেজি পানির তাপমাত্রা ১ কেলভিন বাড়াতে ৪২00 জুল তাপশক্তির প্রয়োজন হয়।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "1"
+  },
+  {
+    "id": "00000012",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Physics",
+    "topic": "Gravitation",
+    "question": "কত অক্ষাংশে সমুদ্রতলে g-এর মানকে আদর্শ মান ধরা হয়?",
+    "options": [
+      "$22.5^\\circ$",
+      "$35^\\circ$",
+      "$45^\\circ$",
+      "$40^\\circ$"
+    ],
+    "answer_index": 2,
+    "explanation": "পৃথিবীর আকৃতি সম্পূর্ণ গোলাকার না হওয়ায় স্থানভেদে $g$ এর মান পরিবর্তিত হয়। $45^\\circ$ অক্ষাংশে সমুদ্রপৃষ্ঠে $g$ এর মানকে আদর্শ মান হিসেবে ধরা হয়।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "1"
+  },
+  {
+    "id": "00000009",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2010-11",
+    "subject": "Physics",
+    "topic": "Work, Power and Energy",
+    "question": "এক অশ্ব ক্ষমতা (H.P)= কত ওয়াট?",
+    "options": [
+      "$476\\text{w}$",
+      "$647\\text{w}$",
+      "$746\\text{w}$",
+      "$764\\text{w}$"
+    ],
+    "answer_index": 2,
+    "explanation": "ক্ষমতার ব্যবহারিক একক অশ্বক্ষমতা বা হর্সপাওয়ার। ১ অশ্ব ক্ষমতা (HP) = ৭৪৬ ওয়াট।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "2"
+  },
+  {
+    "id": "00000002",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Bengali",
+    "topic": "Grammar",
+    "question": "\"গৌড়ীয় ব্যাকরণ\" কার লেখা?",
+    "options": [
+      "ঈশ্বরচন্দ্র বিদ্যাসাগর",
+      "রামমোহন রায়",
+      "প্যারীচাঁদ মিত্র",
+      "অক্ষয়কুমার দত্ত"
+    ],
+    "answer_index": 1,
+    "explanation": "গৌড়ীয় ব্যাকরণ রাজা রামমোহন রায় কর্তৃক রচিত প্রথম বাংলা ব্যাকরণ বই।",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "1"
+  },
+  {
+    "id": "00000016",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Chemistry",
+    "topic": "Stoichiometry",
+    "question": "25gm $ZnCO_3$ হতে কত $ZnO$ পাওয়া যায়?",
+    "options": [
+      "16.22 gm",
+      "18.5 gm",
+      "20.1 gm",
+      "22.3 gm"
+    ],
+    "answer_index": 0,
+    "explanation": "$ZnCO_3 \\rightarrow ZnO + CO_2$. Molar mass $ZnCO_3 = 125.4$ g/mol, $ZnO = 81.4$ g/mol. So, $(25/125.4) \\times 81.4 \\approx 16.22$ g.",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "4"
+  },
+  {
+    "id": "00000001",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Functions",
+    "question": "$f(x) = \\frac{x}{|x|}$ হলে রেঞ্জ কত?",
+    "options": [
+      "{-1, 1}",
+      "{-1, 0, 1}",
+      "R",
+      "R - {0}"
+    ],
+    "answer_index": 0,
+    "explanation": "If $x > 0$, $f(x) = x/x = 1$. If $x < 0$, $f(x) = -x/x = -1$. Since $x$ cannot be 0, the range is {-1, 1}.",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "1"
+  },
+  {
+    "id": "00000018",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Binomial Expansion",
+    "question": "$(k - \\frac{x}{3})^7$ এ $k^3$ এর সহগ 560 হলে $x = $?",
+    "options": [
+      "-2",
+      "2",
+      "-6",
+      "6"
+    ],
+    "answer_index": 2,
+    "explanation": "The term containing $k^3$ is $^7C_4 (k)^3 (-\\frac{x}{3})^4 = 35 \\cdot k^3 \\cdot \\frac{x^4}{81}$. Given $35 \\cdot \\frac{x^4}{81} = 560 \\Rightarrow x^4 = 1296 \\Rightarrow x = \\pm 6$. From context of choices, -6 or 6.",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "3"
+  },
+  {
+    "id": "00000020",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Math",
+    "topic": "Quadratic Equation",
+    "question": "$ax^2 + bx + c = 0$ এখানে নিশ্চায়ক কোনটি?",
+    "options": [
+      "$b^2 + 4ac$",
+      "$b^2 - 4ac$",
+      "$-b \\pm \\sqrt{b^2 - 4ac}$",
+      "$\\sqrt{b^2 - 4ac}$"
+    ],
+    "answer_index": 1,
+    "explanation": "The discriminant (নিশ্চায়ক) of a quadratic equation $ax^2 + bx + c = 0$ is $b^2 - 4ac$.",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "4"
+  },
+  {
+    "id": "00000019",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Physics",
+    "topic": "Sound",
+    "question": "শব্দের তীব্রতার একক লিখ?",
+    "options": [
+      "$Wm^{-2}$",
+      "$W/m$",
+      "$J/s$",
+      "$dB$"
+    ],
+    "answer_index": 0,
+    "explanation": "The unit of intensity of sound is Watts per square meter ($W/m^2$ or $Wm^{-2}$).",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "1"
+  },
+  {
+    "id": "00000015",
+    "type": "mcq",
+    "institution": "NDC",
+    "year": "2024-25",
+    "subject": "Physics",
+    "topic": "Motion",
+    "question": "মুক্তভাবে পতনশীল বস্তুর ১ম, ২য়, ৩য় সেকেন্ডে অতিক্রান্ত দূরত্বের অনুপাত কত?",
+    "options": [
+      "1:2:3",
+      "1:3:5",
+      "1:4:9",
+      "1:1:1"
+    ],
+    "answer_index": 1,
+    "explanation": "For a free-falling body, the ratio of distances traveled in successive seconds is the ratio of odd numbers: 1:3:5...",
+    "stimulus": null,
+    "parts": null,
+    "solution": null,
+    "hidden": false,
+    "serial": "4"
+  },
+  {
+    "id": "7",
+    "type": "mcq",
+    "institution": "SJHSS",
+    "year": "2023",
+    "subject": "Biology",
+    "topic": "Genetics",
+    "question": "বংশগতিবিদ্যার জনক কে?",
+    "options": [
+      "Charles Darwin",
+      "Gregor Johann Mendel",
+      "Robert Hooke",
+      "Lamarck"
+    ],
+    "explanation": "গ্রেগর জোহান মেন্ডেলকে বংশগতিবিদ্যার জনক বলা হয়।",
+    "answer_index": 1
+  },
+  {
+    "id": "3",
+    "type": "sq",
+    "institution": "SJHSS",
+    "year": "2023",
+    "subject": "Math",
+    "stimulus": "একটি বৃত্তের সমীকরণ $x^2 + y^2 - 4x - 6y + 9 = 0$।",
+    "parts": [
+      {
+        "label": "ক",
+        "question": "বৃত্তটির কেন্দ্র নির্ণয় কর।",
+        "mark": 2
+      },
+      {
+        "label": "খ",
+        "question": "বৃত্তটির ব্যাসার্ধ কত?",
+        "mark": 2
+      },
+      {
+        "label": "গ",
+        "question": "বৃত্তটি $x$-অক্ষকে কোন বিন্দুতে ছেদ করে?",
+        "mark": 3
+      },
+      {
+        "label": "ঘ",
+        "question": "বৃত্তটির ক্ষেত্রফল নির্ণয় কর।",
+        "mark": 3
+      }
+    ],
+    "solution": "<p><strong>ক)</strong> কেন্দ্র $(2, 3)$।</p><p><strong>খ)</strong> ব্যাসার্ধ $r = \\sqrt{2^2 + 3^2 - 9} = 2$।</p><p><strong>গ)</strong> $y=0$ বসালে, $x^2 - 4x + 9 = 0$। যেহেতু $D = 16 - 36 < 0$, তাই ছেদ করে না।</p><p><strong>ঘ)</strong> ক্ষেত্রফল $\\pi r^2 = 4\\pi$ বর্গ একক।</p>"
   }
 ]
