@@ -635,7 +635,24 @@ function AdminDashboard({ questions, onUpdate, onExit }: { questions: Question[]
                 </button>
                 {q.hidden && <span className="hidden-badge">HIDDEN</span>}
               </div>
-              <QuestionCard question={q} isAdmin={false} settings={DEFAULT_SETTINGS} />
+              <QuestionCard 
+                question={q} 
+                isAdmin={true} 
+                settings={DEFAULT_SETTINGS} 
+                onUpdateField={async (f, v) => {
+                  const updatedQuestion = { ...q, [f]: v };
+                  const { error: updateError } = await supabase
+                    .from('questions')
+                    .update({ [f]: v })
+                    .eq('id', q.id);
+                  
+                  if (updateError) {
+                    alert("Error saving change: " + updateError.message);
+                  } else {
+                    onUpdate(questions.map(item => item.id === q.id ? updatedQuestion : item));
+                  }
+                }}
+              />
             </div>
           ))}
           {filteredQuestions.length === 0 && <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No questions match your filters.</p>}
@@ -694,17 +711,41 @@ function AdminDashboard({ questions, onUpdate, onExit }: { questions: Question[]
           <span className="preview-label">Live Preview</span>
           <div className="content-feed">
             {previewQuestions.map((q, i) => (
-              <QuestionCard 
-                key={i} 
-                question={q} 
-                isAdmin 
-                onUpdateField={(f: keyof Question, v: any) => { 
-                  const u = [...previewQuestions]; 
-                  u[i] = { ...u[i], [f]: v }; 
-                  setPreviewQuestions(u); 
-                  setJsonInput(JSON.stringify(u.length === 1 && !jsonInput.startsWith('[') ? u[0] : u, null, 2)); 
-                }} 
-              />
+              <div key={i} className="admin-card-wrapper">
+                <QuestionCard 
+                  question={q} 
+                  isAdmin 
+                  onUpdateField={(f: keyof Question, v: any) => { 
+                    const u = [...previewQuestions]; 
+                    u[i] = { ...u[i], [f]: v }; 
+                    setPreviewQuestions(u); 
+                    setJsonInput(JSON.stringify(u.length === 1 && !jsonInput.startsWith('[') ? u[0] : u, null, 2)); 
+                  }} 
+                />
+                {q.id && (
+                  <div style={{ padding: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button 
+                      className="btn btn-primary" 
+                      style={{ fontSize: '0.75rem', padding: '0.25rem 0.75rem' }}
+                      onClick={async () => {
+                        const { error: updateError } = await supabase
+                          .from('questions')
+                          .update(q)
+                          .eq('id', q.id);
+                        
+                        if (updateError) {
+                          alert("Error saving: " + updateError.message);
+                        } else {
+                          alert("Saved successfully!");
+                          onUpdate(questions.map(item => item.id === q.id ? q : item));
+                        }
+                      }}
+                    >
+                      💾 Save to Supabase
+                    </button>
+                  </div>
+                )}
+              </div>
             ))}
             {previewQuestions.length === 0 && <p style={{ textAlign: 'center', padding: '2rem', border: '2px dashed #e2e8f0', borderRadius: '12px', color: '#94a3b8' }}>Preview will appear here after clicking "Update Preview"</p>}
           </div>
