@@ -13,9 +13,10 @@
 ### JSON Schema
 - `serial`: "1", "2" (Numeric string ONLY).
 - `type`: "mcq" | "sq".
-- `institution`: "NDC" | "HCC" | "SJHSS".
+- `institution`: MUST be one of: ["NDC", "HCC", "SJHSS"]. 
+    - *Note:* If you see "UAC" or "UCC", categorize it as "NDC".
 - `year`: "2023".
-- `subject`: "Physics" | "Chemistry" | "Math" | "Biology" | "English" | "GK".
+- `subject`: MUST be one of: ["Physics", "Chemistry", "Math", "Biology", "English", "GK", "Bangla", "ICT", "Accounting", "Finance and Banking", "Business Ent."].
 - `topic`: e.g. "Mechanics".
 - `question`: (MCQ only) Main question text.
 - `options`: (MCQ only) Array of 4 strings.
@@ -26,16 +27,19 @@
 - `solution`: (SQ only) HTML format using `<p>` and `<strong>`.
 
 ### Critical Rules
-1. **Validation Step:** Before finalizing, check the JSON for trailing commas, unescaped quotes within strings, or missing brackets. If errors are found, fix them internally before outputting.
-2. **No Skipping:** Every single question must be converted to JSON. Verify that the output array length matches the number of questions in the input (up to the limit of 10).
-3. **Consolidate SQs:** One "sq" object for all parts (a, b, c). Use the main number for `serial`.
-4. **No Leading Numbers/Labels:** Do NOT include the question number or part label (1, ক, a) at the start of ANY text field.
-5. **LaTeX Commands:** Use **single backslashes** for LaTeX commands within the string (e.g., `\text{unit}`, `\frac`, `\sqrt`).
+1. **Strict Categorization:** You MUST ONLY use the subjects and institutions listed in the schema. Check the image text carefully; the subject name (e.g., "Physics") is usually written at the top or within the headers.
+2. **The "UAC" Rule:** If the image mentions "UAC" or "UCC", you MUST set the institution as "NDC".
+3. **Validation Step:** Before finalizing, check the JSON for trailing commas, unescaped quotes within strings, or missing brackets. If errors are found, fix them internally before outputting.
+4. **No Skipping:** Every single question must be converted to JSON. Verify that the output array length matches the number of questions in the input (up to the limit of 10).
+5. **Consolidate SQs:** One "sq" object for all parts (a, b, c). Use the main number for `serial`.
+6. **Single-Part SQs:** If an SQ has no sub-parts (e.g., just one question without a, b, c labels), place the full question text in the `stimulus` field and leave the `parts` array empty (`[]`). Do NOT create a single part in the `parts` array unless there are multiple distinct sub-questions.
+7. **No Leading Numbers/Labels:** Do NOT include the question number or part label (1, ক, a) at the start of ANY text field.
+8. **LaTeX Commands:** Use **single backslashes** for LaTeX commands within the string (e.g., `\text{unit}`, `\frac`, `\sqrt`).
     - *Correct:* `$\text{unit}$`
     - *Incorrect:* `$\\text{unit}$`
-6. **Math Delimiters:** Use `$ ... $` for inline, `$$...$$` for blocks.
-7. **JSON Safety:** Ensure the resulting string is valid JSON. Escape necessary quotes within the text (e.g., `\"`).
-8. **Accuracy:** Transcribe EXACTLY from image. If correct answer isn't visible, use your knowledge.
+9. **Math Delimiters:** Use `$ ... $` for inline, `$$...$$` for blocks.
+10. **JSON Safety:** Ensure the resulting string is valid JSON. Escape necessary quotes within the text (e.g., `\"`).
+11. **Accuracy:** Transcribe EXACTLY from image. If correct answer isn't visible, use your knowledge.
 
 ### Examples
 **MCQ:** `[{"serial":"1","type":"mcq","institution":"NDC","year":"2023","subject":"Physics","topic":"Units","question":"Unit of force?","options":["N","J","W","Pa"],"answer_index":0,"explanation":"Newton (N)."}]`
