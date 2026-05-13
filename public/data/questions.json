@@ -92,14 +92,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "১১",
-        "question": "---- উভয়ের রয়েছে ইলেকট্রন ট্রান্সপোর্ট সিস্টেম।"
-      }
-    ],
+    "stimulus": "---- উভয়ের রয়েছে ইলেকট্রন ট্রান্সপোর্ট সিস্টেম।",
+    "parts": [],
     "solution": "<p><strong>১১)</strong> <strong>মাইটোকন্ড্রিয়া ও ক্লোরোপ্লাস্ট</strong> উভয়ের ইলেকট্রন ট্রান্সপোর্ট সিস্টেম (ETS) রয়েছে।</p>",
     "hidden": false,
     "serial": "11"
@@ -115,14 +109,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "১২",
-        "question": "বৃক্ক মানবদেহের ---- নিয়ন্ত্রণ করে?"
-      }
-    ],
+    "stimulus": "বৃক্ক মানবদেহের ---- নিয়ন্ত্রণ করে?",
+    "parts": [],
     "solution": "<p><strong>১২)</strong> বৃক্ক মানবদেহের <strong>অসমোরেগুলেশন বা পানির ভারসাম্য</strong> নিয়ন্ত্রণ করে।</p>",
     "hidden": false,
     "serial": "12"
@@ -138,14 +126,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "১৮",
-        "question": "অ্যানাফেজ পর্যায়ের শেষে ---- বৃদ্ধি পেতে থাকে?"
-      }
-    ],
+    "stimulus": "অ্যানাফেজ পর্যায়ের শেষে ---- বৃদ্ধি পেতে থাকে?",
+    "parts": [],
     "solution": "<p><strong>১৮)</strong> অপত্য ক্রোমোজোমের মধ্যবর্তী দূরত্ব বৃদ্ধি পেতে থাকে।</p>",
     "hidden": false,
     "serial": "18"
@@ -161,14 +143,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "২১",
-        "question": "উদ্ভিদের রঙিন ফুল পাতা ---- এতে পাওয়া যায়।"
-      }
-    ],
+    "stimulus": "উদ্ভিদের রঙিন ফুল পাতা ---- এতে পাওয়া যায়।",
+    "parts": [],
     "solution": "<p><strong>২১)</strong> উদ্ভিদের রঙিন ফুল ও পাতায় <strong>ক্রোমোপ্লাস্ট</strong> পাওয়া যায়।</p>",
     "hidden": false,
     "serial": "21"
@@ -184,14 +160,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "২২",
-        "question": "একটি ---- মাছ প্রজনন ঋতুতে একটি ডিম পাড়ে।"
-      }
-    ],
+    "stimulus": "একটি ---- মাছ প্রজনন ঋতুতে একটি ডিম পাড়ে।",
+    "parts": [],
     "solution": "<p><strong>২২)</strong> সাধারণত <strong>হাঙর</strong> বা নির্দিষ্ট কিছু প্রজাতির সামুদ্রিক মাছ (তথ্যসূত্রভেদে ভিন্ন হতে পারে)।</p>",
     "hidden": false,
     "serial": "22"
@@ -207,14 +177,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "২৬",
-        "question": "রঙিন পাতা, ফুল ইত্যাদি কীসের জন্য হয়ে থাকে?"
-      }
-    ],
+    "stimulus": "রঙিন পাতা, ফুল ইত্যাদি কীসের জন্য হয়ে থাকে?",
+    "parts": [],
     "solution": "<p><strong>২৬)</strong> পরাগায়নের জন্য <strong>কীটপতঙ্গকে আকৃষ্ট</strong> করতে।</p>",
     "hidden": false,
     "serial": "26"
@@ -230,14 +194,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "২৯",
-        "question": "কোন মাছ বছরে প্রায় ৩ কোটি প্রজনন করে?"
-      }
-    ],
+    "stimulus": "কোন মাছ বছরে প্রায় ৩ কোটি প্রজনন করে?",
+    "parts": [],
     "solution": "<p><strong>২৯)</strong> সানফিশ (Mola mola)।</p>",
     "hidden": false,
     "serial": "29"
@@ -253,14 +211,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৯",
-        "question": "$CH_4$ থেকে $CHCl_3$ বিক্রিয়া লিখ।"
-      }
-    ],
+    "stimulus": "$CH_4$ থেকে $CHCl_3$ বিক্রিয়া লিখ।",
+    "parts": [],
     "solution": "<p><strong>৯)</strong> $CH_4 + 3Cl_2 \\xrightarrow{uv} CHCl_3 + 3HCl$</p>",
     "hidden": false,
     "serial": "9"
@@ -276,14 +228,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "১৬",
-        "question": "$C_2H_5OH \\xrightarrow{H_2SO_4} C_2H_4 + H_2O, \\Delta H$ কত?"
-      }
-    ],
+    "stimulus": "$C_2H_5OH \\xrightarrow{H_2SO_4} C_2H_4 + H_2O, \\Delta H$ কত?",
+    "parts": [],
     "solution": "<p><strong>১৬)</strong> এটি একটি তাপহারী বিক্রিয়া, তাই $\\Delta H$ ধনাত্মক ($+$)। নির্দিষ্ট মান সাধারণত $+44 \\text{ kJ/mol}$ এর কাছাকাছি হয়।</p>",
     "hidden": false,
     "serial": "16"
@@ -299,14 +245,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "১৯",
-        "question": "$25\\text{gm } ZnCO_3$ কত $ZnO$ পাওয়া যায়?"
-      }
-    ],
+    "stimulus": "$25\\text{gm } ZnCO_3$ কত $ZnO$ পাওয়া যায়?",
+    "parts": [],
     "solution": "<p><strong>১৯)</strong> $ZnCO_3 \\rightarrow ZnO + CO_2$। <br> $ZnCO_3$ এর আণবিক ভর = $65.4+12+(16 \\times 3) = 125.4 \\text{ g}$। <br> $ZnO$ এর আণবিক ভর = $65.4+16 = 81.4 \\text{ g}$। <br> $125.4\\text{g}$ থেকে পাওয়া যায় $81.4\\text{g}$। <br> $25\\text{g}$ থেকে পাওয়া যায় $\\frac{81.4 \\times 25}{125.4} \\approx 16.23 \\text{ g}$।</p>",
     "hidden": false,
     "serial": "19"
@@ -322,14 +262,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "২০",
-        "question": "$CH_3CH_2COONa \\xrightarrow[\\Delta]{CaO} A \\xrightarrow[hv]{Cl_2} B \\xrightarrow{KOH} C$. $A = ? \\& C = ?$"
-      }
-    ],
+    "stimulus": "$CH_3CH_2COONa \\xrightarrow[\\Delta]{CaO} A \\xrightarrow[hv]{Cl_2} B \\xrightarrow{KOH} C$. $A = ? \\& C = ?$",
+    "parts": [],
     "solution": "<p><strong>২০)</strong> $A$ হলো ইথেন ($C_2H_6$) [ডিকার্বক্সিলেশন]। $B$ হলো ইথাইল ক্লোরাইড ($C_2H_5Cl$)। $C$ হলো ইথানল ($C_2H_5OH$) [জলীয় KOH হলে] অথবা ইথিন ($C_2H_4$) [অ্যালকোহলীয় KOH হলে]।</p>",
     "hidden": false,
     "serial": "20"
@@ -345,14 +279,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "২৪",
-        "question": "$\\\\text{Ethanol} \\\\xrightarrow{\\\\text{গাঢ় } H_2SO_4} \\\\text{Ethene} + H_2O, \\\\Delta H = ?$"
-      }
-    ],
+    "stimulus": "$\\\\text{Ethanol} \\\\xrightarrow{\\\\text{গাঢ় } H_2SO_4} \\\\text{Ethene} + H_2O, \\\\Delta H = ?$",
+    "parts": [],
     "solution": "<p><strong>২৪)</strong> এটি একটি তাপহারী (Endothermic) বিক্রিয়া। $\\Delta H$ এর মান প্রায় $+44.5 \\text{ kJ/mol}$।</p>",
     "hidden": false,
     "serial": "24"
@@ -368,14 +296,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৩২",
-        "question": "$He, K^+, N^{3-}$ এর পারমাণবিক ব্যাসার্ধের ক্রম লিখ?"
-      }
-    ],
+    "stimulus": "$He, K^+, N^{3-}$ এর পারমাণবিক ব্যাসার্ধের ক্রম লিখ?",
+    "parts": [],
     "solution": "<p><strong>৩২)</strong> $K^+ < He < N^{3-}$।</p>",
     "hidden": false,
     "serial": "32"
@@ -391,14 +313,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৩৭",
-        "question": "25টি খাতায় 1টি করে বৃত্ত ভরাট করতে 85g গ্রাফাইট লাগে। তাহলে 25টি খাতার প্রতিটি 2টি করে বৃত্ত ভরাট করলে কত গ্রাম কার্বন লাগবে?"
-      }
-    ],
+    "stimulus": "25টি খাতায় 1টি করে বৃত্ত ভরাট করতে 85g গ্রাফাইট লাগে। তাহলে 25টি খাতার প্রতিটি 2টি করে বৃত্ত ভরাট করলে কত গ্রাম কার্বন লাগবে?",
+    "parts": [],
     "solution": "<p><strong>৩৭)</strong> গ্রাফাইট কার্বনের একটি রূপভেদ। ১টি বৃত্তের জন্য লাগে ৮৫ গ্রাম, তাহলে ২টির জন্য লাগবে $85 \\times 2 = 170 \\text{ g}$ কার্বন।</p>",
     "hidden": false,
     "serial": "37"
@@ -414,14 +330,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৪",
-        "question": "Write correct sentence - We are interested ------- (see) this film."
-      }
-    ],
+    "stimulus": "Write correct sentence - We are interested ------- (see) this film.",
+    "parts": [],
     "solution": "<p><strong>৪)</strong> We are interested <strong>in seeing</strong> this film.</p>",
     "hidden": false,
     "serial": "4"
@@ -437,14 +347,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৩৩",
-        "question": "The rolling stone gathers no moss. Here rolling is a -- / Finite verb."
-      }
-    ],
+    "stimulus": "The rolling stone gathers no moss. Here rolling is a -- / Finite verb.",
+    "parts": [],
     "solution": "<p><strong>৩৩)</strong> Rolling এখানে একটি <strong>Participle</strong> (Adjective হিসেবে কাজ করছে)। এটি Finite verb নয়।</p>",
     "hidden": false,
     "serial": "33"
@@ -460,14 +364,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৩৯",
-        "question": "'Time, old man' is a/an ----."
-      }
-    ],
+    "stimulus": "'Time, old man' is a/an ----.",
+    "parts": [],
     "solution": "<p><strong>৩৯)</strong> এটি একটি <strong>Personification</strong> (কবিতার চরণ)।</p>",
     "hidden": false,
     "serial": "39"
@@ -483,14 +381,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "২",
-        "question": "\"গৌড়ীয় ব্যাকরণ\" কার লেখা?"
-      }
-    ],
+    "stimulus": "\"গৌড়ীয় ব্যাকরণ\" কার লেখা?",
+    "parts": [],
     "solution": "<p><strong>২)</strong> রাজা রামমোহন রায়।</p>",
     "hidden": false,
     "serial": "2"
@@ -506,14 +398,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৩",
-        "question": "\"কল্পনা\" কাব্য থেকে কোন কবিতা নেওয়া হয়েছে?"
-      }
-    ],
+    "stimulus": "\"কল্পনা\" কাব্য থেকে কোন কবিতা নেওয়া হয়েছে?",
+    "parts": [],
     "solution": "<p><strong>৩)</strong> ঝিঙেফুল (অথবা পাঠ্যবই অনুযায়ী সুনির্দিষ্ট কবিতা)।</p>",
     "hidden": false,
     "serial": "3"
@@ -529,14 +415,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "১৩",
-        "question": "\"ময়মনসিংহ গীতিকা\" কে সংগ্রহ করে?"
-      }
-    ],
+    "stimulus": "\"ময়মনসিংহ গীতিকা\" কে সংগ্রহ করে?",
+    "parts": [],
     "solution": "<p><strong>১৩)</strong> চন্দ্রকুমার দে (সম্পাদনা করেন দীনেশচন্দ্র সেন)।</p>",
     "hidden": false,
     "serial": "13"
@@ -552,14 +432,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "১৪",
-        "question": "মৌলিক স্বরধ্বনি কয়টি?"
-      }
-    ],
+    "stimulus": "মৌলিক স্বরধ্বনি কয়টি?",
+    "parts": [],
     "solution": "<p><strong>১৪)</strong> ৭টি।</p>",
     "hidden": false,
     "serial": "14"
@@ -575,14 +449,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৩৪",
-        "question": "What are the four ethnic groups of Srilanka ----?"
-      }
-    ],
+    "stimulus": "What are the four ethnic groups of Srilanka ----?",
+    "parts": [],
     "solution": "<p><strong>৩৪)</strong> Sinhalese, Tamils, Moors, and Burghers.</p>",
     "hidden": false,
     "serial": "34"
@@ -598,14 +466,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৩৬",
-        "question": "বাংলা সাহিত্যের চলিত রীতির ধারা কোন পত্রিকা থেকে নেওয়া হয়েছে?"
-      }
-    ],
+    "stimulus": "বাংলা সাহিত্যের চলিত রীতির ধারা কোন পত্রিকা থেকে নেওয়া হয়েছে?",
+    "parts": [],
     "solution": "<p><strong>৩৬)</strong> প্রমথ চৌধুরী সম্পাদিত <strong>সবুজপত্র</strong> পত্রিকা।</p>",
     "hidden": false,
     "serial": "36"
@@ -621,14 +483,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": "$f(x) = \\frac{x}{|x|}$",
-    "parts": [
-      {
-        "mark": 2,
-        "label": "১",
-        "question": "$f(x) = \\frac{x}{|x|}$ হলে রেঞ্জ কত?"
-      }
-    ],
+    "stimulus": "$f(x) = \\frac{x}{|x|}$ হলে রেঞ্জ কত?",
+    "parts": [],
     "solution": "<p><strong>১)</strong> $f(x) = \\frac{x}{|x|}$ ফাংশনটির রেঞ্জ হলো $\\{1, -1\\}$। কারণ $x > 0$ হলে $f(x) = 1$ এবং $x < 0$ হলে $f(x) = -1$।</p>",
     "hidden": false,
     "serial": "1"
@@ -644,14 +500,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৭",
-        "question": "বৃত্তের অধিচাপ --- ও উপচাপে --- কোন।"
-      }
-    ],
+    "stimulus": "বৃত্তের অধিচাপ --- ও উপচাপে --- কোন।",
+    "parts": [],
     "solution": "<p><strong>৭)</strong> বৃত্তের অধিচাপে <strong>সূক্ষ্মকোণ</strong> ও উপচাপে <strong>স্থূলকোণ</strong> থাকে।</p>",
     "hidden": false,
     "serial": "7"
@@ -667,14 +517,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৮",
-        "question": "$ax^2 + bx + c = 0$ এখানে নিশ্চায়ক কোনটি?"
-      }
-    ],
+    "stimulus": "$ax^2 + bx + c = 0$ এখানে নিশ্চায়ক কোনটি?",
+    "parts": [],
     "solution": "<p><strong>৮)</strong> নিশ্চায়ক হলো $D = b^2 - 4ac$।</p>",
     "hidden": false,
     "serial": "8"
@@ -690,14 +534,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "১০",
-        "question": "চারটি ক্রমিক স্বাভাবিক সংখ্যা গুণ করে গুণফলের সাথে ১ যোগ করলে সংখ্যাটি কী হবে?"
-      }
-    ],
+    "stimulus": "চারটি ক্রমিক স্বাভাবিক সংখ্যা গুণ করে গুণফলের সাথে ১ যোগ করলে সংখ্যাটি কী হবে?",
+    "parts": [],
     "solution": "<p><strong>১০)</strong> সংখ্যাটি একটি <strong>পূর্ণবর্গ সংখ্যা</strong> হবে।</p>",
     "hidden": false,
     "serial": "10"
@@ -713,14 +551,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "১৫",
-        "question": "$(k - \\frac{x}{3})^7$ এ $k^3$ এর সহগ 560 হলে $x = ?$ "
-      }
-    ],
+    "stimulus": "$(k - \\frac{x}{3})^7$ এ $k^3$ এর সহগ 560 হলে $x = ?$",
+    "parts": [],
     "solution": "<p><strong>১৫)</strong> দ্বিপদী বিস্তৃতি অনুযায়ী, $k^3$ পদটি হলো $^7C_4 \\cdot k^3 \\cdot (-\\frac{x}{3})^4 = 35 \\cdot k^3 \\cdot \\frac{x^4}{81}$। <br> শর্তমতে, $35 \\cdot \\frac{x^4}{81} = 560 \\implies x^4 = \\frac{560 \\cdot 81}{35} = 16 \\cdot 81 = 1296$। <br> সুতরাং, $x = \\pm 6$।</p>",
     "hidden": false,
     "serial": "15"
@@ -736,14 +568,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "১৭",
-        "question": "একটি বৃত্তের ব্যাসার্ধ 12 সে.মি. এবং বৃত্তের দৈর্ঘ্য ৪ সে.মি. হলে $\\theta = ?$"
-      }
-    ],
+    "stimulus": "একটি বৃত্তের ব্যাসার্ধ 12 সে.মি. এবং বৃত্তের দৈর্ঘ্য ৪ সে.মি. হলে $\\theta = ?$",
+    "parts": [],
     "solution": "<p><strong>১৭)</strong> সূত্র $s = r\\theta$ অনুযায়ী, $\\theta = \\frac{s}{r} = \\frac{8}{12} = \\frac{2}{3}$ রেডিয়ান।</p>",
     "hidden": false,
     "serial": "17"
@@ -759,14 +585,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "২৫",
-        "question": "প্রিজমের বাহুগুলোর দৈর্ঘ্য ৩, ৪, ৫ সে.মি. এবং উচ্চতা ৮ সে.মি. হলে আয়তন কত?"
-      }
-    ],
+    "stimulus": "প্রিজমের বাহুগুলোর দৈর্ঘ্য ৩, ৪, ৫ সে.মি. এবং উচ্চতা ৮ সে.মি. হলে আয়তন কত?",
+    "parts": [],
     "solution": "<p><strong>২৫)</strong> ভূমি একটি সমকোণী ত্রিভুজ যার ক্ষেত্রফল $A = \\frac{1}{2} \\times 3 \\times 4 = 6 \\text{ cm}^2$। আয়তন $V = A \\times h = 6 \\times 8 = 48 \\text{ cm}^3$।</p>",
     "hidden": false,
     "serial": "25"
@@ -782,14 +602,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৩০",
-        "question": "5.23457 ভগ্নাংশ আকারে প্রকাশ করো?"
-      }
-    ],
+    "stimulus": "5.23457 ভগ্নাংশ আকারে প্রকাশ করো?",
+    "parts": [],
     "solution": "<p><strong>৩০)</strong> $\\frac{523457}{100000}$।</p>",
     "hidden": false,
     "serial": "30"
@@ -805,14 +619,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৩১",
-        "question": "$N > 0, 1 \\le 0 < 10 [n \\in Z]$ হলে $N$ এর বৈজ্ঞানিক রূপ?"
-      }
-    ],
+    "stimulus": "$N > 0, 1 \\le 0 < 10 [n \\in Z]$ হলে $N$ এর বৈজ্ঞানিক রূপ?",
+    "parts": [],
     "solution": "<p><strong>৩১)</strong> $N = a \\times 10^n$, যেখানে $1 \\le a < 10$।</p>",
     "hidden": false,
     "serial": "31"
@@ -828,14 +636,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৩৫",
-        "question": "পিরামিডের দৈর্ঘ্য ৪,৬,৮ এবং উচ্চতা ৪। আয়তন কত?"
-      }
-    ],
+    "stimulus": "পিরামিডের দৈর্ঘ্য ৪,৬,৮ এবং উচ্চতা ৪। আয়তন কত?",
+    "parts": [],
     "solution": "<p><strong>৩৫)</strong> ভূমির ক্ষেত্রফল (যদি বিষমবাহু ধরি) বের করে সূত্র $V = \\frac{1}{3} \\times \\text{Area} \\times h$ ব্যবহার করতে হবে।</p>",
     "hidden": false,
     "serial": "35"
@@ -851,14 +653,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৪০",
-        "question": "$ax^2 + bx + c$ এর মূলদ্বয় অসমান, অমূলদ ও অবাস্তব হবে যদি ---?"
-      }
-    ],
+    "stimulus": "$ax^2 + bx + c$ এর মূলদ্বয় অসমান, অমূলদ ও অবাস্তব হবে যদি ---?",
+    "parts": [],
     "solution": "<p><strong>৪০)</strong> যদি নিশ্চায়ক $D = b^2 - 4ac < 0$ হয়।</p>",
     "hidden": false,
     "serial": "40"
@@ -874,14 +670,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৫",
-        "question": "শব্দের তীব্রতার একক লিখ?"
-      }
-    ],
+    "stimulus": "শব্দের তীব্রতার একক লিখ?",
+    "parts": [],
     "solution": "<p><strong>৫)</strong> শব্দের তীব্রতার একক হলো $\\text{Wm}^{-2}$।</p>",
     "hidden": false,
     "serial": "5"
@@ -897,14 +687,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৬",
-        "question": "অবতল দর্পণে বিম্ব বক্রতার কেন্দ্রে থাকলে বিবর্ধন কত?"
-      }
-    ],
+    "stimulus": "অবতল দর্পণে বিম্ব বক্রতার কেন্দ্রে থাকলে বিবর্ধন কত?",
+    "parts": [],
     "solution": "<p><strong>৬)</strong> বিবর্ধন $m = 1$ (বিম্বের আকার ও লক্ষ্যবস্তুর আকার সমান)।</p>",
     "hidden": false,
     "serial": "6"
@@ -920,14 +704,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "২৩",
-        "question": "মুক্তভাবে পতনশীল বস্তুর ১ম, ২য়, ৩য় সেকেন্ডে অতিক্রান্ত দূরত্বের অনুপাত কত?"
-      }
-    ],
+    "stimulus": "মুক্তভাবে পতনশীল বস্তুর ১ম, ২য়, ৩য় সেকেন্ডে অতিক্রান্ত দূরত্বের অনুপাত কত?",
+    "parts": [],
     "solution": "<p><strong>২৩)</strong> গ্যালিলিও-র সূত্রমতে, স্থির অবস্থান থেকে মুক্তভাবে পড়ন্ত বস্তুর অতিক্রান্ত দূরত্ব সময়ের বর্গের সমানুপাতিক ($h \\propto t^2$)। ফলে অনুপাতটি হবে $1^2 : 2^2 : 3^2 = 1 : 4 : 9$। (যদি নির্দিষ্ট তম সেকেন্ডে বলা হয়, তবে $1 : 3 : 5$)।</p>",
     "hidden": false,
     "serial": "23"
@@ -943,14 +721,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "২৭",
-        "question": "ভরবেগ P হলে গতিশক্তি দ্বিগুণ করা হলে নতুন ভরবেগ কত?"
-      }
-    ],
+    "stimulus": "ভরবেগ P হলে গতিশক্তি দ্বিগুণ করা হলে নতুন ভরবেগ কত?",
+    "parts": [],
     "solution": "<p><strong>২৭)</strong> আমরা জানি, $E_k = \\frac{P^2}{2m}$। গতিশক্তি $2E_k$ হলে, $P' = \\sqrt{2m(2E_k)} = \\sqrt{2}P$।</p>",
     "hidden": false,
     "serial": "27"
@@ -966,14 +738,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "২৮",
-        "question": "লক্ষ্যবস্তু বক্রতার কেন্দ্রে রাখলে $m = ?$"
-      }
-    ],
+    "stimulus": "লক্ষ্যবস্তু বক্রতার কেন্দ্রে রাখলে $m = ?$",
+    "parts": [],
     "solution": "<p><strong>২৮)</strong> বিবর্ধন $m = 1$।</p>",
     "hidden": false,
     "serial": "28"
@@ -989,14 +755,8 @@
     "options": null,
     "answer_index": null,
     "explanation": null,
-    "stimulus": null,
-    "parts": [
-      {
-        "mark": 2,
-        "label": "৩৮",
-        "question": "একটি বস্তু হতে $m_1$ ও $m_2$ ভরের দুটি বস্তু ছিটকে $V_1$ ও $V_2$ বেগে আলাদা হলে $\\frac{V_1}{V_2} = ?$"
-      }
-    ],
+    "stimulus": "একটি বস্তু হতে $m_1$ ও $m_2$ ভরের দুটি বস্তু ছিটকে $V_1$ ও $V_2$ বেগে আলাদা হলে $\\frac{V_1}{V_2} = ?$",
+    "parts": [],
     "solution": "<p><strong>৩৮)</strong> ভরবেগের সংরক্ষণ সূত্রানুসারে, $m_1 V_1 + m_2 V_2 = 0 \\implies \\frac{V_1}{V_2} = -\\frac{m_2}{m_1}$।</p>",
     "hidden": false,
     "serial": "38"

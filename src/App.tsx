@@ -427,7 +427,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
                 <span style={{ fontSize: '0.7rem', color: '#666', marginLeft: '0.5rem' }}>[{p.mark || 0}]</span>
               </div>
             ))}
-            {isAdmin && (!question.parts || question.parts.length === 0) && <p style={{ color: 'var(--wrong)', fontSize: '0.8rem' }}>⚠️ Missing parts array</p>}
+            {isAdmin && (!question.parts || question.parts.length === 0) && !question.stimulus && <p style={{ color: 'var(--wrong)', fontSize: '0.8rem' }}>⚠️ Missing parts and stimulus</p>}
           </div>
           {(sol || isAdmin) && <div className="section"><div className="section-title">Solution</div><EditableText text={question.solution || ""} isEditable={isAdmin} style={{ fontSize: '0.9rem', color: '#374151' }} onSave={(v:string) => onUpdateField?.('solution', v)} /></div>}
         </>
