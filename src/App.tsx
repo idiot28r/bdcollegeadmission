@@ -151,6 +151,17 @@ function App() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filteredCount, setFilteredCount] = useState(0);
+
+  // Metadata States
+  const [collegeOptions, setCollegeOptions] = useState<string[]>([]);
+  const [subjectOptions, setSubjectOptions] = useState<string[]>([]);
+  const [typeOptions, setTypeOptions] = useState<string[]>(['MCQ', 'SQ']);
+  const [yearOptions, setYearOptions] = useState<string[]>([]);
 
   const [selInst, setSelInst] = useState<string[]>([]);
   const [selSub, setSelSub] = useState<string[]>([]);
@@ -169,27 +180,23 @@ function App() {
       }
     };
 
-    // 2. Fetch Questions
-    const fetchQuestions = async () => {
-      const { data, error } = await supabase
-        .from('questions')
-        .select('*');
-
-      if (data && !error) {
-        setQuestions(sortQuestions(data));
-        setLoading(false);
-      } else {
-        fetch('/data/questions.json')
-          .then(res => res.json())
-          .then((data: Question[]) => {
-            setQuestions(sortQuestions(data));
-            setLoading(false);
-          });
+    // 2. Fetch Metadata and Total Count
+    const fetchInitialData = async () => {
+      // Fetch metadata for filters
+      const { data: qData, error } = await supabase.from('questions').select('institution, subject, year');
+      if (qData && !error) {
+        setCollegeOptions(Array.from(new Set(qData.map(q => String(q.institution || "").trim()))).filter(Boolean).sort());
+        setSubjectOptions(Array.from(new Set(qData.map(q => String(q.subject || "").trim()))).filter(Boolean).sort());
+        setYearOptions(Array.from(new Set(qData.map(q => String(q.year || "").trim()))).filter(Boolean).sort().reverse());
       }
+
+      // Fetch initial total count
+      const { count, error: countError } = await supabase.from('questions').select('*', { count: 'exact', head: true });
+      if (!countError) setTotalCount(count || 0);
     };
     
     fetchSettings();
-    fetchQuestions();
+    fetchInitialData();
 
     // Subscribe to settings changes for real-time global updates
     const settingsSubscription = supabase
@@ -200,10 +207,94 @@ function App() {
       })
       .subscribe();
 
+    // Subscribe to questions changes for real-time total count updates
+    const questionsSubscription = supabase
+      .channel('public:questions_count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'questions' }, async () => {
+        const { count, error: countError } = await supabase.from('questions').select('*', { count: 'exact', head: true });
+        if (!countError) setTotalCount(count || 0);
+      })
+      .subscribe();
+
     return () => {
       supabase.removeChannel(settingsSubscription);
+      supabase.removeChannel(questionsSubscription);
     };
   }, []);
+
+  const loadQuestions = async (isNewSearch = false) => {
+    const currentPage = isNewSearch ? 0 : page;
+    const pageSize = 20;
+    const start = currentPage * pageSize;
+    const end = start + pageSize - 1;
+
+    if (isNewSearch) {
+      setLoading(true);
+      setQuestions([]);
+    } else {
+      setIsFetchingMore(true);
+    }
+
+    let query = supabase.from('questions').select('*', { count: 'exact' });
+
+    // Apply Filters (AND between categories, IN within category)
+    if (selInst.length > 0) query = query.in('institution', selInst);
+    if (selSub.length > 0) query = query.in('subject', selSub);
+    if (selYear.length > 0) query = query.in('year', selYear);
+    if (selType.length > 0) {
+      const types = selType.map(t => t.toLowerCase());
+      query = query.in('type', types);
+    }
+
+    // Student View: Hide "hidden" questions
+    if (!isAdmin) {
+      query = query.eq('hidden', false);
+    }
+
+    // Apply Sorting (Mirroring local sortQuestions logic)
+    query = query
+      .order('institution', { ascending: true })
+      .order('year', { ascending: false })
+      .order('subject', { ascending: true })
+      .order('type', { ascending: true })
+      .order('serial', { ascending: true })
+      .range(start, end);
+
+    const { data, error, count } = await query;
+
+    if (data && !error) {
+      setQuestions(prev => isNewSearch ? data : [...prev, ...data]);
+      setHasMore(count ? (start + data.length < count) : data.length === pageSize);
+      if (isNewSearch) setFilteredCount(count || 0);
+      
+      if (!isNewSearch) setPage(currentPage + 1);
+      else setPage(1);
+    }
+    
+    setLoading(false);
+    setIsFetchingMore(false);
+  };
+
+  // Infinite Scroll Observer
+  useEffect(() => {
+    if (loading || !hasMore || isFetchingMore) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        loadQuestions();
+      }
+    }, { threshold: 0.1, rootMargin: '400px' }); // rootMargin helps trigger before hitting bottom
+
+    const sentinel = document.getElementById('scroll-sentinel');
+    if (sentinel) observer.observe(sentinel);
+
+    return () => observer.disconnect();
+  }, [loading, hasMore, isFetchingMore, page]);
+
+  // Re-fetch when filters change
+  useEffect(() => {
+    loadQuestions(true);
+  }, [selInst, selSub, selType, selYear, isAdmin]);
 
   const updateQuestions = (newQuestions: Question[]) => {
     setQuestions(newQuestions);
@@ -218,42 +309,6 @@ function App() {
     });
   };
 
-  const studentQuestions = useMemo(() => questions.filter(q => validateQuestion(q).isValid && !q.hidden), [questions]);
-
-  // CATEGORY OPTIONS (Independent Logic): Show ALL available options from the full dataset
-  const collegeOptions = useMemo(() => {
-    return Array.from(new Set(studentQuestions.map(q => String(q.institution || "").trim()))).filter(Boolean).sort();
-  }, [studentQuestions]);
-
-  const subjectOptions = useMemo(() => {
-    return Array.from(new Set(studentQuestions.map(q => String(q.subject || "").trim()))).filter(Boolean).sort();
-  }, [studentQuestions]);
-
-  const typeOptions = useMemo(() => {
-    return Array.from(new Set(studentQuestions.map(q => q.type === 'mcq' ? 'MCQ' : 'SQ'))).sort();
-  }, [studentQuestions]);
-
-  const yearOptions = useMemo(() => {
-    return Array.from(new Set(studentQuestions.map(q => String(q.year || "").trim()))).filter(Boolean).sort().reverse();
-  }, [studentQuestions]);
-
-  // FINAL FILTERED QUESTIONS
-  const filteredQuestions = useMemo(() => {
-    return studentQuestions.filter(q => {
-      const qInst = String(q.institution || "").trim().toLowerCase();
-      const qSub = String(q.subject || "").trim().toLowerCase();
-      const qYear = String(q.year || "").trim().toLowerCase();
-      const qType = (q.type === 'mcq' ? 'MCQ' : 'SQ').toLowerCase();
-
-      const matchInst = selInst.length === 0 || selInst.some(s => s.toLowerCase() === qInst);
-      const matchSub = selSub.length === 0 || selSub.some(s => s.toLowerCase() === qSub);
-      const matchType = selType.length === 0 || selType.some(s => s.toLowerCase() === qType);
-      const matchYear = selYear.length === 0 || selYear.some(s => s.toLowerCase() === qYear);
-
-      return matchInst && matchSub && matchType && matchYear;
-    });
-  }, [studentQuestions, selInst, selSub, selType, selYear]);
-
   const clearAllFilters = () => {
     setSelInst([]);
     setSelSub([]);
@@ -264,7 +319,25 @@ function App() {
   return (
     <div className={isAdmin ? "" : "app-container"}>
       {isAdmin ? (
-        <AdminDashboard questions={questions} onUpdate={updateQuestions} onExit={() => setIsAdmin(false)} />
+        <AdminDashboard 
+          questions={questions} 
+          onUpdate={updateQuestions} 
+          onExit={() => setIsAdmin(false)}
+          collegeOptions={collegeOptions}
+          subjectOptions={subjectOptions}
+          typeOptions={typeOptions}
+          yearOptions={yearOptions}
+          selInst={selInst} setSelInst={setSelInst}
+          selSub={selSub} setSelSub={setSelSub}
+          selType={selType} setSelType={setSelType}
+          selYear={selYear} setSelYear={setSelYear}
+          onClear={clearAllFilters}
+          loadMore={() => loadQuestions()}
+          hasMore={hasMore}
+          isLoadingMore={isFetchingMore}
+          totalCount={totalCount}
+          filteredCount={filteredCount}
+        />
       ) : (
         <>
           <div className="sticky-top">
@@ -285,7 +358,23 @@ function App() {
             />
           </div>
           <main className="content-feed">
-            {loading ? <p style={{ textAlign: 'center', padding: '2rem' }}>Loading...</p> : filteredQuestions.length > 0 ? filteredQuestions.map((q, idx) => <QuestionCard key={`${q.id}-${idx}`} question={q} settings={settings} />) : <p style={{ textAlign: 'center', padding: '2rem' }}>No results match your filters.</p>}
+            {loading ? (
+              <p style={{ textAlign: 'center', padding: '2rem' }}>Loading questions...</p>
+            ) : questions.length > 0 ? (
+              <>
+                {questions.map((q, idx) => (
+                  <QuestionCard key={`${q.id}-${idx}`} question={q} settings={settings} />
+                ))}
+                <div id="scroll-sentinel" style={{ height: '20px', margin: '10px 0' }} />
+                {hasMore && (
+                  <div style={{ padding: '2rem', textAlign: 'center' }}>
+                    <p style={{ color: '#666', fontSize: '0.8rem' }}>{isFetchingMore ? "Loading more..." : "Scroll for more"}</p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p style={{ textAlign: 'center', padding: '2rem' }}>No results match your filters.</p>
+            )}
           </main>
           <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} settings={settings} onSettingChange={handleSettingChange} />
         </>
@@ -455,7 +544,43 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
   );
 }
 
-function AdminDashboard({ questions, onUpdate, onExit }: { questions: Question[]; onUpdate: (qs: Question[]) => void; onExit: () => void }) {
+function AdminDashboard({ 
+  questions, 
+  onUpdate, 
+  onExit,
+  collegeOptions,
+  subjectOptions,
+  typeOptions,
+  yearOptions,
+  selInst, setSelInst,
+  selSub, setSelSub,
+  selType, setSelType,
+  selYear, setSelYear,
+  onClear,
+  loadMore,
+  hasMore,
+  isLoadingMore,
+  totalCount,
+  filteredCount
+}: { 
+  questions: Question[]; 
+  onUpdate: (qs: Question[]) => void; 
+  onExit: () => void;
+  collegeOptions: string[];
+  subjectOptions: string[];
+  typeOptions: string[];
+  yearOptions: string[];
+  selInst: string[]; setSelInst: React.Dispatch<React.SetStateAction<string[]>>;
+  selSub: string[]; setSelSub: React.Dispatch<React.SetStateAction<string[]>>;
+  selType: string[]; setSelType: React.Dispatch<React.SetStateAction<string[]>>;
+  selYear: string[]; setSelYear: React.Dispatch<React.SetStateAction<string[]>>;
+  onClear: () => void;
+  loadMore: () => void;
+  hasMore: boolean;
+  isLoadingMore: boolean;
+  totalCount: number;
+  filteredCount: number;
+}) {
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState("");
   const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
@@ -471,12 +596,6 @@ function AdminDashboard({ questions, onUpdate, onExit }: { questions: Question[]
       alert("Failed to copy prompt template.");
     }
   };
-
-  // Filtering State
-  const [selInst, setSelInst] = useState<string[]>([]);
-  const [selSub, setSelSub] = useState<string[]>([]);
-  const [selType, setSelType] = useState<string[]>([]);
-  const [selYear, setSelYear] = useState<string[]>([]);
 
   // Font Management
   const [fontBn, setFontBn] = useState("'Noto Serif Bengali', serif");
@@ -545,61 +664,25 @@ function AdminDashboard({ questions, onUpdate, onExit }: { questions: Question[]
     window.scrollTo(0,0);
   };
 
-  // CATEGORY OPTIONS (Independent Logic): Show ALL available options from the full dataset
-  const collegeOptions = useMemo(() => {
-    return Array.from(new Set(questions.map((q: Question) => String(q.institution || "").trim()))).filter(Boolean).sort();
-  }, [questions]);
-
-  const subjectOptions = useMemo(() => {
-    return Array.from(new Set(questions.map((q: Question) => String(q.subject || "").trim()))).filter(Boolean).sort();
-  }, [questions]);
-
-  const typeOptions = useMemo(() => {
-    return Array.from(new Set(questions.map((q: Question) => q.type === 'mcq' ? 'MCQ' : 'SQ'))).sort();
-  }, [questions]);
-
-  const yearOptions = useMemo(() => {
-    return Array.from(new Set(questions.map((q: Question) => String(q.year || "").trim()))).filter(Boolean).sort().reverse();
-  }, [questions]);
-
-  // FINAL FILTERED QUESTIONS
-  const filteredQuestions = useMemo(() => {
-    return questions.filter((q: Question) => {
-      const qInst = String(q.institution || "").trim().toLowerCase();
-      const qSub = String(q.subject || "").trim().toLowerCase();
-      const qYear = String(q.year || "").trim().toLowerCase();
-      const qType = (q.type === 'mcq' ? 'MCQ' : 'SQ').toLowerCase();
-
-      const matchInst = selInst.length === 0 || selInst.some(s => s.toLowerCase() === qInst);
-      const matchSub = selSub.length === 0 || selSub.some(s => s.toLowerCase() === qSub);
-      const matchType = selType.length === 0 || selType.some(s => s.toLowerCase() === qType);
-      const matchYear = selYear.length === 0 || selYear.some(s => s.toLowerCase() === qYear);
-
-      return matchInst && matchSub && matchType && matchYear;
-    });
-  }, [questions, selInst, selSub, selType, selYear]);
-
-  const clearAllFilters = () => {
-    setSelInst([]);
-    setSelSub([]);
-    setSelType([]);
-    setSelYear([]);
-  };
-
   return (
     <div className="admin-layout">
       {/* Left Column: Question List */}
       <div className="admin-question-list-column">
         <div className="admin-header">
-          <h3>Questions ({questions.length})</h3>
+          <div>
+            <h3 style={{ margin: 0 }}>Admin Portal</h3>
+            <p style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+              Total Questions in DB: <strong>{totalCount}</strong>
+            </p>
+          </div>
           <button className="btn btn-secondary" onClick={onExit}>Exit Admin</button>
         </div>
         
         <div className="sticky-filter-section">
           <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h4 style={{ margin: 0 }}>Filter List ({filteredQuestions.length} matches)</h4>
+            <h4 style={{ margin: 0 }}>Active Filters (<strong>{filteredCount}</strong> matches found)</h4>
             { (selInst.length > 0 || selSub.length > 0 || selType.length > 0 || selYear.length > 0) && (
-              <button className="btn-text" onClick={clearAllFilters} style={{ fontSize: '0.7rem', color: 'var(--wrong)' }}>Clear All Filters</button>
+              <button className="btn-text" onClick={onClear} style={{ fontSize: '0.7rem', color: 'var(--wrong)' }}>Clear All</button>
             )}
           </div>
           <FilterBar 
@@ -611,12 +694,12 @@ function AdminDashboard({ questions, onUpdate, onExit }: { questions: Question[]
             selSub={selSub} setSelSub={setSelSub}
             selType={selType} setSelType={setSelType}
             selYear={selYear} setSelYear={setSelYear}
-            onClear={clearAllFilters}
+            onClear={onClear}
           />
         </div>
 
         <div className="admin-cards-view">
-          {filteredQuestions.map((q: Question, idx: number) => (
+          {questions.map((q: Question, idx: number) => (
             <div key={`${q.id}-${idx}`} className="admin-card-wrapper">
               <div className="admin-card-actions">
                 <button 
@@ -655,7 +738,13 @@ function AdminDashboard({ questions, onUpdate, onExit }: { questions: Question[]
               />
             </div>
           ))}
-          {filteredQuestions.length === 0 && <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No questions match your filters.</p>}
+          <div id="scroll-sentinel" style={{ height: '20px', margin: '10px 0' }} />
+          {hasMore && (
+            <div style={{ padding: '1rem', textAlign: 'center' }}>
+              <p style={{ color: '#666', fontSize: '0.8rem' }}>{isLoadingMore ? "Loading more..." : "Scroll for more"}</p>
+            </div>
+          )}
+          {questions.length === 0 && !isLoadingMore && <p style={{ textAlign: 'center', padding: '2rem', color: '#666' }}>No questions match your filters.</p>}
         </div>
       </div>
 
