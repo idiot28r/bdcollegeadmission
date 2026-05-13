@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import katex from 'katex'
 import { supabase } from './supabaseClient'
 import './App.css'
@@ -30,24 +30,6 @@ const SUBJECT_COLORS: Record<string, string> = {
   English: 'var(--color-english)',
   GK: 'var(--color-gk)',
 };
-
-const VALID_INSTITUTIONS = ['NDC', 'HCC', 'SJHSS'];
-
-function validateQuestion(q: Question): { isValid: boolean; error?: string } {
-  if (!q.institution || !q.year || !q.subject) return { isValid: false, error: "Missing metadata" };
-  if (!VALID_INSTITUTIONS.includes(q.institution)) return { isValid: false, error: "Invalid institution (must be NDC, HCC, or SJHSS)" };
-  if (q.serial === undefined || q.serial === "") return { isValid: false, error: "Missing serial number" };
-  
-  if (q.type === 'mcq') {
-    if (!q.question) return { isValid: false, error: "Missing question" };
-    if (!q.options || q.options.length !== 4) return { isValid: false, error: "MCQ needs 4 options" };
-    if (q.answer_index === undefined) return { isValid: false, error: "Missing answer index" };
-  } else {
-    if (!q.stimulus && (!q.parts || q.parts.length === 0)) return { isValid: false, error: "SQ needs content" };
-    if (!q.solution) return { isValid: false, error: "Missing solution" };
-  }
-  return { isValid: true };
-}
 
 interface Settings {
   autoExp: boolean;
@@ -160,7 +142,7 @@ function App() {
   // Metadata States
   const [collegeOptions, setCollegeOptions] = useState<string[]>([]);
   const [subjectOptions, setSubjectOptions] = useState<string[]>([]);
-  const [typeOptions, setTypeOptions] = useState<string[]>(['MCQ', 'SQ']);
+  const [typeOptions] = useState<string[]>(['MCQ', 'SQ']);
   const [yearOptions, setYearOptions] = useState<string[]>([]);
 
   const [selInst, setSelInst] = useState<string[]>([]);
@@ -332,7 +314,6 @@ function App() {
           selType={selType} setSelType={setSelType}
           selYear={selYear} setSelYear={setSelYear}
           onClear={clearAllFilters}
-          loadMore={() => loadQuestions()}
           hasMore={hasMore}
           isLoadingMore={isFetchingMore}
           totalCount={totalCount}
@@ -557,7 +538,6 @@ function AdminDashboard({
   selType, setSelType,
   selYear, setSelYear,
   onClear,
-  loadMore,
   hasMore,
   isLoadingMore,
   totalCount,
@@ -575,7 +555,6 @@ function AdminDashboard({
   selType: string[]; setSelType: React.Dispatch<React.SetStateAction<string[]>>;
   selYear: string[]; setSelYear: React.Dispatch<React.SetStateAction<string[]>>;
   onClear: () => void;
-  loadMore: () => void;
   hasMore: boolean;
   isLoadingMore: boolean;
   totalCount: number;
