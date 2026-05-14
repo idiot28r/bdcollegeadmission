@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import katex from 'katex'
 import { supabase } from './supabaseClient'
 import './App.css'
@@ -164,17 +164,36 @@ function App() {
 
     // 2. Fetch Metadata and Total Count
     const fetchInitialData = async () => {
-      // Fetch metadata for filters
-      const { data: qData, error } = await supabase.from('questions').select('institution, subject, year');
-      if (qData && !error) {
-        setCollegeOptions(Array.from(new Set(qData.map(q => String(q.institution || "").trim()))).filter(Boolean).sort());
-        setSubjectOptions(Array.from(new Set(qData.map(q => String(q.subject || "").trim()))).filter(Boolean).sort());
-        setYearOptions(Array.from(new Set(qData.map(q => String(q.year || "").trim()))).filter(Boolean).sort().reverse());
-      }
-
-      // Fetch initial total count
+      // Fetch initial total count (fast)
       const { count, error: countError } = await supabase.from('questions').select('*', { count: 'exact', head: true });
       if (!countError) setTotalCount(count || 0);
+
+      // Fetch metadata for filters (handle > 1000 rows)
+      let allMeta: any[] = [];
+      let from = 0;
+      const step = 1000;
+      let moreMeta = true;
+
+      while (moreMeta) {
+        const { data, error: metaError } = await supabase
+          .from('questions')
+          .select('institution, subject, year')
+          .range(from, from + step - 1);
+        
+        if (data && !metaError) {
+          allMeta = [...allMeta, ...data];
+          if (data.length < step) moreMeta = false;
+          else from += step;
+        } else {
+          moreMeta = false;
+        }
+      }
+
+      if (allMeta.length > 0) {
+        setCollegeOptions(Array.from(new Set(allMeta.map(q => String(q.institution || "").trim()))).filter(Boolean).sort());
+        setSubjectOptions(Array.from(new Set(allMeta.map(q => String(q.subject || "").trim()))).filter(Boolean).sort());
+        setYearOptions(Array.from(new Set(allMeta.map(q => String(q.year || "").trim()))).filter(Boolean).sort().reverse());
+      }
     };
     
     fetchSettings();
@@ -204,7 +223,7 @@ function App() {
     };
   }, []);
 
-  const loadQuestions = async (isNewSearch = false) => {
+  const loadQuestions = useCallback(async (isNewSearch = false) => {
     const currentPage = isNewSearch ? 0 : page;
     const pageSize = 20;
     const start = currentPage * pageSize;
@@ -233,13 +252,13 @@ function App() {
       query = query.eq('hidden', false);
     }
 
-    // Apply Sorting (Mirroring local sortQuestions logic)
+    // Apply Sorting (Mirroring local sortQuestions logic as much as possible)
     query = query
       .order('institution', { ascending: true })
       .order('year', { ascending: false })
       .order('subject', { ascending: true })
       .order('type', { ascending: true })
-      .order('serial', { ascending: true })
+      .order('serial', { ascending: true }) // Note: String sort, may need padding
       .range(start, end);
 
     const { data, error, count } = await query;
@@ -255,7 +274,7 @@ function App() {
     
     setLoading(false);
     setIsFetchingMore(false);
-  };
+  }, [page, selInst, selSub, selType, selYear, isAdmin]);
 
   // Infinite Scroll Observer
   useEffect(() => {
@@ -265,13 +284,13 @@ function App() {
       if (entries[0].isIntersecting) {
         loadQuestions();
       }
-    }, { threshold: 0.1, rootMargin: '400px' }); // rootMargin helps trigger before hitting bottom
+    }, { threshold: 0.1, rootMargin: '400px' });
 
     const sentinel = document.getElementById('scroll-sentinel');
     if (sentinel) observer.observe(sentinel);
 
     return () => observer.disconnect();
-  }, [loading, hasMore, isFetchingMore, page]);
+  }, [loading, hasMore, isFetchingMore, loadQuestions, isAdmin]);
 
   // Re-fetch when filters change
   useEffect(() => {
@@ -643,6 +662,20 @@ function AdminDashboard({
     window.scrollTo(0,0);
   };
 
+  const handleToggleHidden = async (q: Question) => {
+    const newHidden = !q.hidden;
+    const { error: updateError } = await supabase
+      .from('questions')
+      .update({ hidden: newHidden })
+      .eq('id', q.id);
+
+    if (updateError) {
+      alert("Error updating visibility: " + updateError.message);
+    } else {
+      onUpdate(questions.map((item: Question) => item.id === q.id ? { ...item, hidden: newHidden } : item));
+    }
+  };
+
   return (
     <div className="admin-layout">
       {/* Left Column: Question List */}
@@ -684,7 +717,7 @@ function AdminDashboard({
                 <button 
                   className={`btn ${q.hidden ? 'btn-secondary' : 'btn-primary'}`} 
                   style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}
-                  onClick={() => onUpdate(questions.map((item: Question) => item.id === q.id ? { ...item, hidden: !item.hidden } : item))}
+                  onClick={() => handleToggleHidden(q)}
                 >
                   {q.hidden ? '👁️ Show' : '🚫 Hide'}
                 </button>
