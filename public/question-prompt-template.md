@@ -15,7 +15,7 @@
 - `type`: "mcq" | "sq".
 - `institution`: MUST be one of: ["NDC", "HCC", "SJHSS"]. 
     - *Note:* If you see "UAC" or "UCC", categorize it as "NDC".
-- `year`: "2023".
+- `year`: "2023", "2024", or "Practice". Use "Practice" if the questions are from a general practice set rather than a specific admission year.
 - `subject`: MUST be one of: ["Physics", "Chemistry", "Math", "Biology", "English", "GK", "Bangla", "ICT", "Accounting", "Finance and Banking", "Business Ent."].
 - `topic`: e.g. "Mechanics".
 - `question`: (MCQ only) Main question text.
