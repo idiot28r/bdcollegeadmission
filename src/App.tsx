@@ -1,6 +1,7 @@
 import { Component, useState, useEffect, useCallback } from 'react'
 import type { ErrorInfo, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import * as Sentry from '@sentry/react'
 import katex from 'katex'
 import { supabase } from './supabaseClient'
 import './App.css'
@@ -16,6 +17,10 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, EBState> {
   static getDerivedStateFromError(error: Error): EBState { return { error }; }
   componentDidCatch(error: Error, info: ErrorInfo) {
     console.error('[ErrorBoundary]', error, info);
+    // Report to Sentry if configured (no-op when DSN absent).
+    try {
+      Sentry.captureException(error, { extra: { componentStack: info.componentStack } });
+    } catch { /* ignore — Sentry not initialized */ }
   }
   render() {
     if (this.state.error) {

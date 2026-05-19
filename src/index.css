@@ -1,7 +1,31 @@
-/* Fonts (KaTeX CSS is bundled via main.tsx — not loaded from CDN) */
+/* Fonts (KaTeX CSS is bundled via main.tsx; Bengali fonts are self-hosted
+   from /public/fonts/ — fonts.maateen.me dependency removed for IAB
+   reliability) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Hind+Siliguri:wght@400;600;700&family=Noto+Serif+Bengali:wght@400;700&display=swap');
-@import url('https://fonts.maateen.me/kalpurush/font.css');
-@import url('https://fonts.maateen.me/solaimanlipi/font.css');
+
+@font-face {
+  font-family: 'Kalpurush';
+  font-display: swap;
+  font-style: normal;
+  font-weight: 100 900;
+  src: url('/fonts/Kalpurush-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'SolaimanLipi';
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+  src: url('/fonts/SolaimanLipi-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'SolaimanLipi';
+  font-display: swap;
+  font-style: normal;
+  font-weight: 700;
+  src: url('/fonts/SolaimanLipi-Bold.woff2') format('woff2');
+}
 
 /* ========== Design Tokens ========== */
 
@@ -341,6 +365,11 @@ header h2 {
   display: flex;
   align-items: flex-end;
   animation: fadeOverlay 0.2s ease-out;
+  /* dvh tracks the dynamic visible viewport (excludes browser chrome that
+     comes and goes). On mobile + in-app browsers, 100vh overshoots the
+     visible area and pushes the modal's bottom off-screen. */
+  height: 100vh;
+  height: 100dvh;
 }
 @keyframes fadeOverlay { from { opacity: 0; } to { opacity: 1; } }
 
@@ -350,9 +379,11 @@ header h2 {
   max-width: 640px;
   margin: 0 auto;
   border-radius: 20px 20px 0 0;
-  padding: 0.6rem 1.25rem 1.5rem;
-  max-height: 82vh;
+  padding: 0.6rem 1.25rem max(1.5rem, calc(1rem + env(safe-area-inset-bottom, 0px)));
+  max-height: 80vh;
+  max-height: 80dvh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   border-top: 1px solid var(--border);
   box-shadow: var(--shadow-lg);
   animation: slideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
