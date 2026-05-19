@@ -90,9 +90,16 @@ Deno.serve(async (req) => {
         return json(200, { data });
       }
       case 'update_settings': {
-        const p = payload as { font_bn?: string; font_en?: string };
-        if (!p?.font_bn || !p?.font_en) return json(400, { error: 'invalid payload' });
-        const { error } = await sb.from('settings').upsert({ id: 1, font_bn: p.font_bn, font_en: p.font_en });
+        const p = (payload ?? {}) as Record<string, unknown>;
+        const allowed = ['font_bn', 'font_en', 'banner_enabled', 'banner_message'];
+        const update: Record<string, unknown> = { id: 1 };
+        for (const k of allowed) {
+          if (k in p) update[k] = p[k];
+        }
+        if (Object.keys(update).length === 1) {
+          return json(400, { error: 'no valid fields to update' });
+        }
+        const { error } = await sb.from('settings').upsert(update);
         if (error) return json(400, { error: error.message });
         return json(200, { ok: true });
       }

@@ -287,6 +287,12 @@ const I = {
       <path d="m21 21-4.3-4.3" />
     </svg>
   ),
+  Undo: ({ size = 16 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 7v6h6" />
+      <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+    </svg>
+  ),
 };
 
 /* ============ Student info (passed via URL on first visit) ============ */
@@ -646,6 +652,48 @@ function App() {
   // localStorage and the next reload picks up any new URL params).
   const [student] = useState<StudentInfo | null>(() => captureStudentFromURL() ?? readStudent());
 
+  // Read/unread state for the current student. Persisted server-side in
+  // public.student_progress as a single row per student (read_question_ids
+  // is a deduplicated text[]). Toggles go through atomic RPCs so concurrent
+  // writes can't clobber the array. Empty/unidentified students don't get
+  // read tracking — swipe gesture is disabled for them.
+  const [readSet, setReadSet] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    const phone = student?.phone;
+    if (!phone) { setReadSet(new Set()); return; }
+    let cancelled = false;
+    supabase
+      .from('student_progress')
+      .select('read_question_ids')
+      .eq('student_phone', phone)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (cancelled || error || !data) return;
+        const ids = (data as { read_question_ids?: string[] }).read_question_ids ?? [];
+        setReadSet(new Set(ids));
+      });
+    return () => { cancelled = true; };
+  }, [student?.phone]);
+
+  const toggleRead = useCallback(async (questionId: string) => {
+    const phone = student?.phone;
+    if (!phone) return;
+    const wasRead = readSet.has(questionId);
+    // Optimistic local update.
+    setReadSet(prev => {
+      const next = new Set(prev);
+      if (wasRead) next.delete(questionId); else next.add(questionId);
+      return next;
+    });
+    const rpcName = wasRead ? 'unmark_question_read' : 'mark_question_read';
+    const { error } = await supabase.rpc(rpcName, {
+      p_phone: phone,
+      p_question_id: questionId,
+    });
+    if (error) console.error(`[toggleRead] ${rpcName} failed`, error);
+  }, [student?.phone, readSet]);
+
   // Search (debounced)
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -660,6 +708,21 @@ function App() {
     try { localStorage.setItem(IAB_DISMISS_KEY, '1'); } catch { /* ignore */ }
     setIabDismissed(true);
   };
+
+  // Announcement banner (driven by settings.banner_enabled / banner_message).
+  // Auto-hides on first scroll. Re-renders on realtime settings updates.
+  const [bannerEnabled, setBannerEnabled] = useState(false);
+  const [bannerMessage, setBannerMessage] = useState('');
+  const [announceVisible, setAnnounceVisible] = useState(true);
+  useEffect(() => {
+    if (!bannerEnabled) return;
+    setAnnounceVisible(true);
+    const onScroll = () => {
+      if (window.scrollY > 24) setAnnounceVisible(false);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [bannerEnabled, bannerMessage]);
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 300);
     return () => clearTimeout(t);
@@ -729,6 +792,8 @@ function App() {
       if (data && !error) {
         if (data.font_bn) document.documentElement.style.setProperty('--font-bn', data.font_bn);
         if (data.font_en) document.documentElement.style.setProperty('--font-en', data.font_en);
+        if (typeof data.banner_enabled === 'boolean') setBannerEnabled(data.banner_enabled);
+        if (typeof data.banner_message === 'string') setBannerMessage(data.banner_message);
       }
     };
 
@@ -765,9 +830,13 @@ function App() {
 
     const settingsSubscription = supabase
       .channel('public:settings')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings' }, payload => {
-        if (payload.new.font_bn) document.documentElement.style.setProperty('--font-bn', payload.new.font_bn);
-        if (payload.new.font_en) document.documentElement.style.setProperty('--font-en', payload.new.font_en);
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'settings' }, payload => {
+        const row = payload.new as Record<string, unknown> | undefined;
+        if (!row) return;
+        if (typeof row.font_bn === 'string') document.documentElement.style.setProperty('--font-bn', row.font_bn);
+        if (typeof row.font_en === 'string') document.documentElement.style.setProperty('--font-en', row.font_en);
+        if (typeof row.banner_enabled === 'boolean') setBannerEnabled(row.banner_enabled);
+        if (typeof row.banner_message === 'string') setBannerMessage(row.banner_message);
       })
       .subscribe();
 
@@ -959,6 +1028,11 @@ function App() {
         />
       ) : (
         <>
+          {bannerEnabled && bannerMessage && (
+            <div className={`announce-banner ${announceVisible ? '' : 'announce-hidden'}`} role="status">
+              <span>{bannerMessage}</span>
+            </div>
+          )}
           {iabKind && !iabDismissed && (
             <div className="iab-banner" role="note">
               <span>For the best experience, open this page in Chrome or Safari ({iabKind}-এ চলছে).</span>
@@ -1023,7 +1097,13 @@ function App() {
             ) : questions.length > 0 ? (
               <>
                 {questions.map((q, idx) => (
-                  <QuestionCard key={`${q.id}-${idx}`} question={q} settings={settings} />
+                  <QuestionCard
+                    key={`${q.id}-${idx}`}
+                    question={q}
+                    settings={settings}
+                    isRead={readSet.has(q.id)}
+                    onToggleRead={student?.phone ? () => toggleRead(q.id) : undefined}
+                  />
                 ))}
                 <div id="scroll-sentinel" style={{ height: '20px', margin: '10px 0' }} />
                 <div className="feed-end">
@@ -1078,11 +1158,38 @@ function FilterBar({ collegeOptions, subjectOptions, typeOptions, yearOptions, s
 }
 
 /* ============ Question Card ============ */
-function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { question: Question; isAdmin?: boolean; onUpdateField?: (f: keyof Question, v: any) => void; settings?: Settings }) {
+function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRead = false, onToggleRead }: { question: Question; isAdmin?: boolean; onUpdateField?: (f: keyof Question, v: any) => void; settings?: Settings; isRead?: boolean; onToggleRead?: () => void }) {
   const [sel, setSel] = useState<number | null>(null);
   const [sol, setSol] = useState(false);
   const [optRevealed, setOptRevealed] = useState(true);
   const [ansRevealed, setAnsRevealed] = useState(false);
+
+  // Swipe-to-toggle-read state (student-side only)
+  const [dragX, setDragX] = useState(0);
+  const dragXRef = useRef(0);
+  const startXRef = useRef(0);
+  const swipingRef = useRef(false);
+  const swipeEnabled = !isAdmin && !!onToggleRead;
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!swipeEnabled) return;
+    startXRef.current = e.touches[0].clientX;
+    swipingRef.current = true;
+  };
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!swipingRef.current) return;
+    const diff = e.touches[0].clientX - startXRef.current;
+    const clamped = Math.max(-160, Math.min(160, diff));
+    dragXRef.current = clamped;
+    setDragX(clamped);
+  };
+  const handleTouchEnd = () => {
+    if (!swipingRef.current) return;
+    if (Math.abs(dragXRef.current) > 80) onToggleRead?.();
+    dragXRef.current = 0;
+    setDragX(0);
+    swipingRef.current = false;
+  };
 
   useEffect(() => {
     if (isAdmin) {
@@ -1109,13 +1216,24 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
 
   const showLabel = !!question.stimulus || (question.parts && question.parts.length > 1);
   const subjectColor = SUBJECT_COLORS[question.subject] || 'var(--text-faint)';
+  const shouldDim = question.hidden || isRead;
+  const isSwiping = dragX !== 0;
+  const isArmed = Math.abs(dragX) > 80;
 
-  return (
-    <article className={`card ${question.hidden ? 'read' : ''}`}>
+  const articleEl = (
+    <article
+      className={`card ${shouldDim ? 'read' : ''} ${isSwiping ? 'swiping' : ''}`}
+      style={isSwiping ? { transform: `translateX(${dragX}px)`, transition: 'none' } : undefined}
+      onTouchStart={swipeEnabled ? handleTouchStart : undefined}
+      onTouchMove={swipeEnabled ? handleTouchMove : undefined}
+      onTouchEnd={swipeEnabled ? handleTouchEnd : undefined}
+      onTouchCancel={swipeEnabled ? handleTouchEnd : undefined}
+    >
       <div className="card-meta">
         <span className="badge badge-subject" style={{ background: subjectColor }}>{displaySubject(question.subject)}</span>
         <span className="badge-meta">{question.institution} · {question.year}</span>
         <div className="card-meta-end">
+          {isRead && !isAdmin && <span className="read-pill"><I.Check size={11} /> পঠিত</span>}
           {question.serial && <span className="badge-serial">#{question.serial}</span>}
         </div>
       </div>
@@ -1221,6 +1339,21 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
       )}
     </article>
   );
+
+  if (!swipeEnabled) return articleEl;
+
+  return (
+    <div className="card-swipe-wrapper">
+      <div
+        className={`card-swipe-bg ${dragX > 0 ? 'dir-right' : 'dir-left'} ${isArmed ? 'armed' : ''} ${isRead ? 'unmark' : ''}`}
+        aria-hidden="true"
+      >
+        {isRead ? <I.Undo size={18} /> : <I.Check size={18} />}
+        <span>{isRead ? 'অপঠিত' : 'পঠিত'}</span>
+      </div>
+      {articleEl}
+    </div>
+  );
 }
 
 /* ============ Admin Dashboard (writes route through Edge Function) ============ */
@@ -1289,13 +1422,17 @@ function AdminDashboard({
 
   const [fontBn, setFontBn] = useState("'Noto Serif Bengali', serif");
   const [fontEn, setFontEn] = useState("'Times New Roman', serif");
+  const [bannerEnabledLocal, setBannerEnabledLocal] = useState(false);
+  const [bannerMessageLocal, setBannerMessageLocal] = useState('প্রশ্ন আপলোডের কাজ চলছে');
 
   useEffect(() => {
     const fetchSettings = async () => {
       const { data, error: settingsError } = await supabase.from('settings').select('*').single();
       if (data && !settingsError) {
-        setFontBn(data.font_bn);
-        setFontEn(data.font_en);
+        if (data.font_bn) setFontBn(data.font_bn);
+        if (data.font_en) setFontEn(data.font_en);
+        if (typeof data.banner_enabled === 'boolean') setBannerEnabledLocal(data.banner_enabled);
+        if (typeof data.banner_message === 'string' && data.banner_message) setBannerMessageLocal(data.banner_message);
       }
     };
     fetchSettings();
@@ -1305,6 +1442,15 @@ function AdminDashboard({
     const r = await adminCall('update_settings', { font_bn: fontBn, font_en: fontEn });
     if (r.error) alert("Error saving settings: " + r.error);
     else alert("Global settings saved!");
+  };
+
+  const saveBanner = async () => {
+    const r = await adminCall('update_settings', {
+      banner_enabled: bannerEnabledLocal,
+      banner_message: bannerMessageLocal,
+    });
+    if (r.error) alert("Error saving banner: " + r.error);
+    else alert("Banner saved!");
   };
 
   const handleBulkUpload = async () => {
@@ -1454,6 +1600,32 @@ function AdminDashboard({
             </div>
           </div>
           <button className="btn btn-primary" onClick={saveSettings}>Save Global Typography</button>
+        </div>
+
+        <div className="admin-section">
+          <h4>Announcement Banner</h4>
+          <p style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.25rem', marginBottom: '1rem' }}>
+            Shows a single-line banner at the top of the student feed. Auto-hides when the student scrolls.
+          </p>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', marginBottom: '0.85rem', fontSize: '0.88rem', fontWeight: 600, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={bannerEnabledLocal}
+              onChange={e => setBannerEnabledLocal(e.target.checked)}
+              style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }}
+            />
+            Show banner to students
+          </label>
+          <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, marginBottom: '4px' }}>Banner text</label>
+          <input
+            type="text"
+            className="edit-input"
+            value={bannerMessageLocal}
+            onChange={e => setBannerMessageLocal(e.target.value)}
+            placeholder="প্রশ্ন আপলোডের কাজ চলছে"
+            style={{ marginBottom: '1rem', width: '100%' }}
+          />
+          <button className="btn btn-primary" onClick={saveBanner}>Save Banner</button>
         </div>
 
         <div className="admin-section" style={{ display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
