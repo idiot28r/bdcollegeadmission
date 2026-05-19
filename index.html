@@ -3,9 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#0b0d12" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#f6f7fb" media="(prefers-color-scheme: light)" />
+    <!-- In-app browsers (Facebook, Messenger, WhatsApp, etc.) cache HTML
+         aggressively. These headers + Vercel's defaults force fresh HTML on
+         every visit; hashed JS/CSS assets are still long-cached normally. -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
     <title>Admission Prep</title>
     <script>
       // Pre-paint theme apply to prevent flash of wrong color
@@ -21,6 +27,14 @@
           }
         } catch (e) {}
       })();
+      // Defensive: unregister any stale service workers from prior deploys
+      // (we don't ship a SW; any leftover one would intercept fetches and
+      // serve outdated assets in some in-app browsers).
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations()
+          .then(function (rs) { rs.forEach(function (r) { r.unregister(); }); })
+          .catch(function () {});
+      }
     </script>
   </head>
   <body>

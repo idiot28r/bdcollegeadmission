@@ -1,9 +1,61 @@
-import { useState, useEffect, useCallback } from 'react'
+import { Component, useState, useEffect, useCallback } from 'react'
+import type { ErrorInfo, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import katex from 'katex'
 import { supabase } from './supabaseClient'
 import './App.css'
 import './Admin.css'
+
+/* ============ Error Boundary ============ */
+// Catches any unexpected React render error and shows a Reload UI instead of
+// the blank screen that in-app browsers tend to produce when something breaks
+// deep in the tree.
+interface EBState { error: Error | null }
+export class ErrorBoundary extends Component<{ children: ReactNode }, EBState> {
+  state: EBState = { error: null };
+  static getDerivedStateFromError(error: Error): EBState { return { error }; }
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    console.error('[ErrorBoundary]', error, info);
+  }
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="error-screen">
+          <div className="error-card">
+            <h2>Something went wrong</h2>
+            <p>The app hit an unexpected error. Try reloading. If it keeps happening, open this page in your phone's main browser (Chrome / Safari).</p>
+            <button onClick={() => { try { localStorage.removeItem('studyGroup'); } catch {/*ignore*/} window.location.reload(); }}>Reload</button>
+            <details>
+              <summary>Details</summary>
+              <pre>{this.state.error.message}</pre>
+            </details>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+/* ============ In-app browser detection ============ */
+function detectInAppBrowser(): string | null {
+  if (typeof navigator === 'undefined') return null;
+  const ua = navigator.userAgent;
+  const m = ua.toLowerCase();
+  if (m.includes('fban') || m.includes('fbav') || m.includes('fb_iab')) return 'Facebook';
+  if (m.includes('messenger')) return 'Messenger';
+  if (m.includes('instagram')) return 'Instagram';
+  if (m.includes('whatsapp')) return 'WhatsApp';
+  if (m.includes('line/')) return 'Line';
+  if (m.includes('twitter') || m.includes('twitterandroid')) return 'Twitter/X';
+  if (m.includes('tiktok')) return 'TikTok';
+  if (m.includes('snapchat')) return 'Snapchat';
+  // Generic Android WebView signal: " wv)" token in UA.
+  if (/android.*;\s*wv\)/i.test(ua)) return 'In-app';
+  return null;
+}
+
+const IAB_DISMISS_KEY = 'iabBannerDismissed';
 
 interface Question {
   id: string;
@@ -570,6 +622,16 @@ function App() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
+
+  // In-app browser banner (shown once, dismissible)
+  const [iabKind] = useState<string | null>(() => detectInAppBrowser());
+  const [iabDismissed, setIabDismissed] = useState<boolean>(() => {
+    try { return localStorage.getItem(IAB_DISMISS_KEY) === '1'; } catch { return false; }
+  });
+  const dismissIabBanner = () => {
+    try { localStorage.setItem(IAB_DISMISS_KEY, '1'); } catch { /* ignore */ }
+    setIabDismissed(true);
+  };
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(searchQuery), 300);
     return () => clearTimeout(t);
@@ -824,6 +886,12 @@ function App() {
         />
       ) : (
         <>
+          {iabKind && !iabDismissed && (
+            <div className="iab-banner" role="note">
+              <span>For the best experience, open this page in Chrome or Safari ({iabKind}-এ চলছে).</span>
+              <button onClick={dismissIabBanner} aria-label="Dismiss"><I.Close size={14} /></button>
+            </div>
+          )}
           <div className="sticky-top">
             <header>
               <h2>{student?.name ? `Hi, ${firstName(student.name)}!` : 'Admission Prep'}</h2>

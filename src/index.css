@@ -1,8 +1,7 @@
-/* Fonts */
+/* Fonts (KaTeX CSS is bundled via main.tsx — not loaded from CDN) */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Hind+Siliguri:wght@400;600;700&family=Noto+Serif+Bengali:wght@400;700&display=swap');
 @import url('https://fonts.maateen.me/kalpurush/font.css');
 @import url('https://fonts.maateen.me/solaimanlipi/font.css');
-@import url('https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css');
 
 /* ========== Design Tokens ========== */
 
@@ -1015,6 +1014,109 @@ input:checked + .slider:before {
   font-weight: 600;
 }
 .auth-switch .auth-back:hover { color: var(--primary-hover); }
+
+/* ========== In-app Browser Banner ========== */
+
+.iab-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.9rem;
+  background: var(--primary-tint);
+  color: var(--primary);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.4;
+}
+.iab-banner button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.iab-banner button:hover { opacity: 1; background: var(--surface-3); }
+
+/* ========== Error Screen (from ErrorBoundary) ========== */
+
+.error-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: var(--bg);
+}
+.error-card {
+  max-width: 440px;
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-family: var(--font-ui);
+  box-shadow: var(--shadow-md);
+}
+.error-card h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.error-card p {
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.error-card button {
+  margin-top: 0.5rem;
+  align-self: flex-start;
+  padding: 0.6rem 1.1rem;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+.error-card button:hover { background: var(--primary-hover); }
+.error-card details {
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+.error-card details summary {
+  cursor: pointer;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+}
+.error-card pre {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  font-family: var(--font-mono);
+  font-size: 0.74rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--text);
+  max-height: 200px;
+  overflow: auto;
+}
 
 /* ========== Group Selector ========== */
 
