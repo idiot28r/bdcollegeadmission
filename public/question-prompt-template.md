@@ -14,7 +14,11 @@
 - `serial`: "1", "2" (Numeric string ONLY).
 - `type`: "mcq" | "sq".
 - `institution`: MUST be one of: ["NDC", "HCC", "SJHSS"]. 
-    - *Note:* If you see "UAC" or "UCC", categorize it as "NDC".
+    - *Detection Logic:* Search the image for headers or footers mentioning college names:
+        - "Notre Dame" or "NDC" -> "NDC"
+        - "Holy Cross" or "HCC" -> "HCC"
+        - "St. Joseph" or "SJS" or "SJHSS" -> "SJHSS"
+    - *Coaching Centers:* If you see "UAC" or "UCC" without a specific college name, check the question style and content. If you are still unsure, do NOT default to NDC; use your best judgement based on common question patterns from these institutions.
 - `year`: "2023", "2024", or "Practice". Use "Practice" if the questions are from a general practice set rather than a specific admission year.
 - `subject`: MUST be one of: ["Physics", "Chemistry", "Math", "Biology", "English", "GK", "Bangla", "ICT", "Accounting", "Finance and Banking", "Business Ent."].
 - `topic`: e.g. "Mechanics".
@@ -27,8 +31,8 @@
 - `solution`: (SQ only) HTML format using `<p>` and `<strong>`.
 
 ### Critical Rules
-1. **Strict Categorization:** You MUST ONLY use the subjects and institutions listed in the schema. Check the image text carefully; the subject name (e.g., "Physics") is usually written at the top or within the headers.
-2. **The "UAC" Rule:** If the image mentions "UAC" or "UCC", you MUST set the institution as "NDC".
+1. **Strict Categorization:** You MUST ONLY use the subjects and institutions listed in the schema. Check the image text carefully; the institution name and subject name are usually written at the very top.
+2. **Identification Priority:** Prioritize explicit college names found in headers over any coaching center labels (like UAC/UCC).
 3. **Validation Step:** Before finalizing, check the JSON for trailing commas, unescaped quotes within strings, or missing brackets. If errors are found, fix them internally before outputting.
 4. **No Skipping:** Every single question must be converted to JSON. Verify that the output array length matches the number of questions in the input (up to the limit of 10).
 5. **Consolidate SQs:** One "sq" object for all parts (a, b, c). Use the main number for `serial`.
@@ -42,5 +46,5 @@
 11. **Accuracy:** Transcribe EXACTLY from image. If correct answer isn't visible, use your knowledge.
 
 ### Examples
-**MCQ:** `[{"serial":"1","type":"mcq","institution":"NDC","year":"2023","subject":"Physics","topic":"Units","question":"Unit of force?","options":["N","J","W","Pa"],"answer_index":0,"explanation":"Newton (N)."}]`
-**SQ (Multi-part):** `[{"serial":"5","type":"sq","institution":"SJHSS","year":"2022","subject":"Math","topic":"Algebra","stimulus":"$x+y=5$","parts":[{"label":"ক","question":"Find y if x=2","mark":2},{"label":"খ","question":"Find x if y=1","mark":2}],"solution":"<p>$y=3$</p><p>$x=4$</p>"}]`
+**MCQ (Holy Cross):** `[{"serial":"1","type":"mcq","institution":"HCC","year":"2023","subject":"Biology","topic":"Cell","question":"Powerhouse of cell?","options":["Nucleus","Mitochondria","Ribosome","Lysosome"],"answer_index":1,"explanation":"Mitochondria produces ATP."}]`
+**SQ (St. Joseph):** `[{"serial":"5","type":"sq","institution":"SJHSS","year":"2022","subject":"Math","topic":"Algebra","stimulus":"$x+y=5$","parts":[{"label":"ক","question":"Find y if x=2","mark":2},{"label":"খ","question":"Find x if y=1","mark":2}],"solution":"<p>$y=3$</p><p>$x=4$</p>"}]`
