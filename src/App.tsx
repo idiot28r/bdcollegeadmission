@@ -198,6 +198,20 @@ function renderMath(text: string) {
   return res;
 }
 
+// Wrap every occurrence of `query` in <mark>, in the text portions of the
+// already-rendered HTML only (so we don't break KaTeX spans or HTML tags).
+function highlightInHTML(html: string, query: string): string {
+  if (!query || !query.trim()) return html;
+  const q = query.trim();
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp(`(${escaped})`, 'gi');
+  // Tokenize: each match is either an HTML tag or a run of text between tags.
+  return html.replace(/(<[^>]+>)|([^<]+)/g, (_full, tag, text) => {
+    if (tag) return tag;
+    return text.replace(re, '<mark>$1</mark>');
+  });
+}
+
 /* ============ Icons (inline SVG) ============ */
 const I = {
   Gear: ({ size = 18 }: { size?: number } = {}) => (
@@ -334,12 +348,12 @@ function firstName(full: string): string {
 }
 
 /* ============ Editable text ============ */
-function EditableText({ text, onSave, className = "", isEditable = false, style = {} }: { text: string; onSave: (v: string) => void; className?: string; isEditable?: boolean; style?: React.CSSProperties }) {
+function EditableText({ text, onSave, className = "", isEditable = false, style = {}, highlight = '' }: { text: string; onSave: (v: string) => void; className?: string; isEditable?: boolean; style?: React.CSSProperties; highlight?: string }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(text);
 
   if (isEditable && editing) return <textarea className="edit-input" value={val} onChange={e => setVal(e.target.value)} onBlur={() => { setEditing(false); onSave(val); }} autoFocus />;
-  return <div className={`${className} ${isEditable ? 'editable-field' : ''}`} style={style} onClick={() => { if (isEditable) { setEditing(true); setVal(text); } }} dangerouslySetInnerHTML={{ __html: renderMath(text) }} />;
+  return <div className={`${className} ${isEditable ? 'editable-field' : ''}`} style={style} onClick={() => { if (isEditable) { setEditing(true); setVal(text); } }} dangerouslySetInnerHTML={{ __html: highlightInHTML(renderMath(text), highlight) }} />;
 }
 
 /* ============ Multi-select bottom-sheet modal ============ */
@@ -733,9 +747,12 @@ function App() {
       card.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s, filter 0.3s';
       card.style.transform = 'translateX(0)';
       if (Math.abs(diffX) > 80) {
+        // Toggle the class on the DOM synchronously (like the reference does)
+        // so opacity/filter animate in the same frame as the snap-back. The
+        // toggleRead call below updates React state for persistence; by the
+        // time React re-renders, the className it sets matches the DOM.
+        card.classList.toggle('read');
         const qid = card.getAttribute('data-question-id');
-        // Only persist if we have a student identity. The visual swipe still
-        // works for everyone — the toggle is the only thing gated on phone.
         if (qid) toggleReadRef.current(qid);
       }
       active = false;
@@ -1181,6 +1198,7 @@ function App() {
                     settings={settings}
                     isRead={readSet.has(q.id)}
                     wobble={wobbleEnabled && idx === 0}
+                    searchQuery={debouncedQuery}
                   />
                 ))}
                 <div id="scroll-sentinel" style={{ height: '20px', margin: '10px 0' }} />
@@ -1236,7 +1254,7 @@ function FilterBar({ collegeOptions, subjectOptions, typeOptions, yearOptions, s
 }
 
 /* ============ Question Card ============ */
-function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRead = false, wobble = false }: { question: Question; isAdmin?: boolean; onUpdateField?: (f: keyof Question, v: any) => void; settings?: Settings; isRead?: boolean; wobble?: boolean }) {
+function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRead = false, wobble = false, searchQuery = '' }: { question: Question; isAdmin?: boolean; onUpdateField?: (f: keyof Question, v: any) => void; settings?: Settings; isRead?: boolean; wobble?: boolean; searchQuery?: string }) {
   const [sel, setSel] = useState<number | null>(null);
   const [sol, setSol] = useState(false);
   const [optRevealed, setOptRevealed] = useState(true);
@@ -1284,7 +1302,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
           {question.serial && <span className="badge-serial">#{question.serial}</span>}
         </div>
       </div>
-      <EditableText className="card-header-main" text={question.type === 'mcq' ? (question.question || "") : (question.stimulus || "")} isEditable={isAdmin} onSave={(v: string) => onUpdateField?.(question.type === 'mcq' ? 'question' : 'stimulus', v)} />
+      <EditableText className="card-header-main" text={question.type === 'mcq' ? (question.question || "") : (question.stimulus || "")} isEditable={isAdmin} highlight={searchQuery} onSave={(v: string) => onUpdateField?.(question.type === 'mcq' ? 'question' : 'stimulus', v)} />
       {question.type === 'mcq' ? (
         <>
           {(optRevealed || isAdmin) && (
@@ -1312,7 +1330,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
                     )}
                     <button className={cl} onClick={() => handleOptionClick(i)} disabled={isInteractionDisabled} style={{ flex: 1 }}>
                       <strong>{String.fromCharCode(65 + i)}</strong>
-                      <EditableText text={opt} isEditable={isAdmin} onSave={(v: string) => { const o = [...(question.options || [])]; o[i] = v; onUpdateField?.('options', o); }} />
+                      <EditableText text={opt} isEditable={isAdmin} highlight={searchQuery} onSave={(v: string) => { const o = [...(question.options || [])]; o[i] = v; onUpdateField?.('options', o); }} />
                       {showCheck && <span className="option-icon"><I.Check /></span>}
                       {showCross && <span className="option-icon"><I.X /></span>}
                     </button>
@@ -1326,14 +1344,14 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
               <div className="section-title">Correct Answer</div>
               <div className="answer-box">
                 <strong>{String.fromCharCode(65 + (question.answer_index || 0))}</strong>
-                <EditableText text={question.options?.[question.answer_index || 0] || ""} isEditable={false} onSave={() => {}} />
+                <EditableText text={question.options?.[question.answer_index || 0] || ""} isEditable={false} highlight={searchQuery} onSave={() => {}} />
               </div>
             </div>
           )}
           {(sol || isAdmin) && question.explanation && (
             <div className="section">
               <div className="section-title">Explanation</div>
-              <EditableText text={question.explanation} isEditable={isAdmin} style={{ fontSize: '0.94rem', color: 'var(--text)', lineHeight: 1.6 }} onSave={(v: string) => onUpdateField?.('explanation', v)} />
+              <EditableText text={question.explanation} isEditable={isAdmin} highlight={searchQuery} style={{ fontSize: '0.94rem', color: 'var(--text)', lineHeight: 1.6 }} onSave={(v: string) => onUpdateField?.('explanation', v)} />
             </div>
           )}
         </>
@@ -1343,7 +1361,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
             {(question.parts || []).map((p: { label: string; question: string; mark: number }, i: number) => (
               <div key={i} className="cq-part">
                 {showLabel && <strong>{p.label || "?"})</strong>}
-                <EditableText text={p.question || ""} isEditable={isAdmin} style={{ display: 'inline' }} onSave={(v: string) => { const pts = [...(question.parts || [])]; pts[i] = { ...pts[i], question: v }; onUpdateField?.('parts', pts); }} />
+                <EditableText text={p.question || ""} isEditable={isAdmin} highlight={searchQuery} style={{ display: 'inline' }} onSave={(v: string) => { const pts = [...(question.parts || [])]; pts[i] = { ...pts[i], question: v }; onUpdateField?.('parts', pts); }} />
                 <span className="cq-mark">[{p.mark || 0}]</span>
               </div>
             ))}
@@ -1352,7 +1370,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
           {(sol || isAdmin) && (
             <div className="section">
               <div className="section-title">Solution</div>
-              <EditableText text={question.solution || ""} isEditable={isAdmin} style={{ fontSize: '0.94rem', color: 'var(--text)', lineHeight: 1.6 }} onSave={(v: string) => onUpdateField?.('solution', v)} />
+              <EditableText text={question.solution || ""} isEditable={isAdmin} highlight={searchQuery} style={{ fontSize: '0.94rem', color: 'var(--text)', lineHeight: 1.6 }} onSave={(v: string) => onUpdateField?.('solution', v)} />
             </div>
           )}
         </>

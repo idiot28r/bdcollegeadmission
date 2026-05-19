@@ -1277,6 +1277,21 @@ input:checked + .slider:before {
   transform: rotate(-90deg);
 }
 
+/* ========== Search highlight ========== */
+
+mark {
+  background: rgba(251, 191, 36, 0.32);
+  color: inherit;
+  padding: 0.02em 0.22em;
+  border-radius: 3px;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.55);
+}
+[data-theme="light"] mark {
+  background: #fef3c7;
+  box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.55);
+}
+
 /* ========== KaTeX ========== */
 
 .katex-display { margin: 0.5rem 0 !important; }
