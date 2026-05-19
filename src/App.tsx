@@ -694,6 +694,71 @@ function App() {
     if (error) console.error(`[toggleRead] ${rpcName} failed`, error);
   }, [student?.phone, readSet]);
 
+  // Native swipe-to-toggle-read on the student feed. We attach raw touch
+  // listeners (not React synthetic events) because some Android WebViews and
+  // in-app browsers don't propagate React's delegated touchmove/touchend
+  // reliably — works in DevTools but fails on the actual phone.
+  const feedRef = useRef<HTMLElement>(null);
+  const toggleReadRef = useRef(toggleRead);
+  useEffect(() => { toggleReadRef.current = toggleRead; }, [toggleRead]);
+
+  useEffect(() => {
+    const feed = feedRef.current;
+    if (!feed) return;
+    if (!student?.phone) return; // No identity → no read tracking.
+
+    let startX = 0;
+    let currentX = 0;
+    let swipeCard: HTMLElement | null = null;
+    let active = false;
+
+    const onStart = (e: TouchEvent) => {
+      const target = e.target as HTMLElement | null;
+      const card = target?.closest<HTMLElement>('.card[data-question-id]') ?? null;
+      if (!card) return;
+      swipeCard = card;
+      startX = e.touches[0].clientX;
+      currentX = startX;
+      active = true;
+      card.style.transition = 'none';
+    };
+    const onMove = (e: TouchEvent) => {
+      if (!active || !swipeCard) return;
+      currentX = e.touches[0].clientX;
+      swipeCard.style.transform = `translateX(${currentX - startX}px)`;
+    };
+    const onEnd = () => {
+      if (!active || !swipeCard) return;
+      const diffX = currentX - startX;
+      const card = swipeCard;
+      card.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s, filter 0.3s';
+      card.style.transform = 'translateX(0)';
+      if (Math.abs(diffX) > 80) {
+        const qid = card.getAttribute('data-question-id');
+        if (qid) toggleReadRef.current(qid);
+      }
+      active = false;
+      swipeCard = null;
+    };
+
+    feed.addEventListener('touchstart', onStart, { passive: true });
+    feed.addEventListener('touchmove', onMove, { passive: true });
+    feed.addEventListener('touchend', onEnd);
+    feed.addEventListener('touchcancel', onEnd);
+    return () => {
+      feed.removeEventListener('touchstart', onStart);
+      feed.removeEventListener('touchmove', onMove);
+      feed.removeEventListener('touchend', onEnd);
+      feed.removeEventListener('touchcancel', onEnd);
+    };
+  }, [student?.phone]);
+
+  // Wobble the first card once per session — the consume-effect is wired
+  // up below, after `questions` is declared.
+  const [wobbleEnabled, setWobbleEnabled] = useState(() => {
+    try { return sessionStorage.getItem('wobbleShown') !== '1'; } catch { return false; }
+  });
+
   // Search (debounced)
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -942,6 +1007,16 @@ function App() {
     setIsFetchingMore(false);
   }, [page, selInst, selSub, selType, selYear, isAdmin, studyGroup, debouncedQuery, cacheKey]);
 
+  // Wobble: once the first cards have actually loaded, mark the session as
+  // "wobble shown" and clear the flag a moment later so subsequent renders
+  // (filter changes, etc.) don't re-trigger the animation.
+  useEffect(() => {
+    if (!wobbleEnabled || questions.length === 0 || !student?.phone) return;
+    try { sessionStorage.setItem('wobbleShown', '1'); } catch { /* ignore */ }
+    const t = setTimeout(() => setWobbleEnabled(false), 1500);
+    return () => clearTimeout(t);
+  }, [wobbleEnabled, questions.length, student?.phone]);
+
   // Infinite scroll
   useEffect(() => {
     if (loading || !hasMore || isFetchingMore) return;
@@ -1087,7 +1162,7 @@ function App() {
               onClear={clearAllFilters}
             />
           </div>
-          <main className="content-feed">
+          <main className="content-feed" ref={feedRef}>
             {loading ? (
               <>
                 <SkeletonCard />
@@ -1102,7 +1177,7 @@ function App() {
                     question={q}
                     settings={settings}
                     isRead={readSet.has(q.id)}
-                    onToggleRead={student?.phone ? () => toggleRead(q.id) : undefined}
+                    wobble={wobbleEnabled && idx === 0}
                   />
                 ))}
                 <div id="scroll-sentinel" style={{ height: '20px', margin: '10px 0' }} />
@@ -1158,38 +1233,14 @@ function FilterBar({ collegeOptions, subjectOptions, typeOptions, yearOptions, s
 }
 
 /* ============ Question Card ============ */
-function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRead = false, onToggleRead }: { question: Question; isAdmin?: boolean; onUpdateField?: (f: keyof Question, v: any) => void; settings?: Settings; isRead?: boolean; onToggleRead?: () => void }) {
+function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRead = false, wobble = false }: { question: Question; isAdmin?: boolean; onUpdateField?: (f: keyof Question, v: any) => void; settings?: Settings; isRead?: boolean; wobble?: boolean }) {
   const [sel, setSel] = useState<number | null>(null);
   const [sol, setSol] = useState(false);
   const [optRevealed, setOptRevealed] = useState(true);
   const [ansRevealed, setAnsRevealed] = useState(false);
-
-  // Swipe-to-toggle-read state (student-side only)
-  const [dragX, setDragX] = useState(0);
-  const dragXRef = useRef(0);
-  const startXRef = useRef(0);
-  const swipingRef = useRef(false);
-  const swipeEnabled = !isAdmin && !!onToggleRead;
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (!swipeEnabled) return;
-    startXRef.current = e.touches[0].clientX;
-    swipingRef.current = true;
-  };
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!swipingRef.current) return;
-    const diff = e.touches[0].clientX - startXRef.current;
-    const clamped = Math.max(-160, Math.min(160, diff));
-    dragXRef.current = clamped;
-    setDragX(clamped);
-  };
-  const handleTouchEnd = () => {
-    if (!swipingRef.current) return;
-    if (Math.abs(dragXRef.current) > 80) onToggleRead?.();
-    dragXRef.current = 0;
-    setDragX(0);
-    swipingRef.current = false;
-  };
+  // Swipe-to-toggle-read is wired at the App level via native addEventListener
+  // on the feed root (delegation by data-question-id). React's synthetic
+  // touch handlers were unreliable in some Android WebViews / real phones.
 
   useEffect(() => {
     if (isAdmin) {
@@ -1217,23 +1268,16 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
   const showLabel = !!question.stimulus || (question.parts && question.parts.length > 1);
   const subjectColor = SUBJECT_COLORS[question.subject] || 'var(--text-faint)';
   const shouldDim = question.hidden || isRead;
-  const isSwiping = dragX !== 0;
-  const isArmed = Math.abs(dragX) > 80;
 
-  const articleEl = (
+  return (
     <article
-      className={`card ${shouldDim ? 'read' : ''} ${isSwiping ? 'swiping' : ''}`}
-      style={isSwiping ? { transform: `translateX(${dragX}px)`, transition: 'none' } : undefined}
-      onTouchStart={swipeEnabled ? handleTouchStart : undefined}
-      onTouchMove={swipeEnabled ? handleTouchMove : undefined}
-      onTouchEnd={swipeEnabled ? handleTouchEnd : undefined}
-      onTouchCancel={swipeEnabled ? handleTouchEnd : undefined}
+      className={`card ${shouldDim ? 'read' : ''} ${wobble ? 'wobble' : ''}`}
+      data-question-id={isAdmin ? undefined : question.id}
     >
       <div className="card-meta">
         <span className="badge badge-subject" style={{ background: subjectColor }}>{displaySubject(question.subject)}</span>
         <span className="badge-meta">{question.institution} · {question.year}</span>
         <div className="card-meta-end">
-          {isRead && !isAdmin && <span className="read-pill"><I.Check size={11} /> পঠিত</span>}
           {question.serial && <span className="badge-serial">#{question.serial}</span>}
         </div>
       </div>
@@ -1338,27 +1382,6 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
         )
       )}
     </article>
-  );
-
-  if (!swipeEnabled) return articleEl;
-
-  return (
-    <div className="card-swipe-wrapper">
-      <div
-        className={`card-swipe-bg ${dragX > 0 ? 'dir-right' : 'dir-left'} ${isArmed ? 'armed' : ''} ${isRead ? 'unmark' : ''}`}
-        aria-hidden="true"
-      >
-        {isRead ? (
-          <I.Undo size={18} />
-        ) : (
-          <>
-            <I.Check size={18} />
-            <span>পঠিত</span>
-          </>
-        )}
-      </div>
-      {articleEl}
-    </div>
   );
 }
 
