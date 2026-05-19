@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Claude Code session state and worktrees
+.claude/
+
+# Supabase CLI cache (project ref, etc. — not for commit)
+supabase/.temp/

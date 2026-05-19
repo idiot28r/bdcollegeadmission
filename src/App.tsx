@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import katex from 'katex'
 import { supabase } from './supabaseClient'
 import './App.css'
@@ -29,7 +30,43 @@ const SUBJECT_COLORS: Record<string, string> = {
   Biology: 'var(--color-biology)',
   English: 'var(--color-english)',
   GK: 'var(--color-gk)',
+  Bangla: 'var(--color-bangla)',
+  Accounting: 'var(--color-accounting)',
+  'Business Entrepreneurship': 'var(--color-business)',
+  Finance: 'var(--color-finance)',
+  Marketing: 'var(--color-marketing)',
+  Civics: 'var(--color-civics)',
+  History: 'var(--color-history)',
+  Geography: 'var(--color-geography)',
+  Economics: 'var(--color-economics)',
 };
+
+/* ============ Study Group ============ */
+type Group = 'science' | 'bst' | 'humanities';
+
+const GROUP_LABELS: Record<Group, string> = {
+  science: 'বিজ্ঞান',
+  bst: 'ব্যবসায় শিক্ষা',
+  humanities: 'মানবিক',
+};
+
+const GROUP_SUBJECTS: Record<Group, string[]> = {
+  // The order in each array IS the display + sort order on the feed.
+  science:    ['Physics', 'Chemistry', 'Biology', 'Math', 'Bangla', 'English', 'GK'],
+  bst:        ['Accounting', 'Business Entrepreneurship', 'Finance', 'Marketing', 'Math', 'Bangla', 'GK'],
+  humanities: ['Civics', 'History', 'Geography', 'Economics', 'Math', 'Bangla', 'English', 'GK'],
+};
+
+const INSTITUTION_ORDER = ['NDC', 'HCC', 'SJHSS'];
+
+const GROUP_KEY = 'studyGroup';
+
+function readGroup(): Group | null {
+  if (typeof window === 'undefined') return null;
+  const raw = localStorage.getItem(GROUP_KEY);
+  if (raw === 'science' || raw === 'bst' || raw === 'humanities') return raw;
+  return null;
+}
 
 interface Settings {
   autoExp: boolean;
@@ -39,6 +76,21 @@ interface Settings {
 }
 
 const DEFAULT_SETTINGS: Settings = { autoExp: false, showOpt: true, showAns: false, showExp: false };
+
+type Theme = 'dark' | 'light' | 'system';
+
+function applyTheme(t: Theme) {
+  const root = document.documentElement;
+  if (t === 'system') {
+    root.removeAttribute('data-theme');
+    const prefersLight = window.matchMedia('(prefers-color-scheme: light)').matches;
+    if (prefersLight) root.setAttribute('data-theme', 'light');
+  } else if (t === 'light') {
+    root.setAttribute('data-theme', 'light');
+  } else {
+    root.removeAttribute('data-theme');
+  }
+}
 
 function sortQuestions(qs: Question[]): Question[] {
   return [...qs].sort((a, b) => {
@@ -54,8 +106,7 @@ function sortQuestions(qs: Question[]): Question[] {
 
 function cleanText(t: string) {
   if (!t) return "";
-  // Remove leading numbers like "1. ", "24) ", "১. ", "১০। "
-  return t.replace(/^[\d\u09E6-\u09EF]+[\s.\u0964\)]+\s*/, "").trim();
+  return t.replace(/^[\d০-৯]+[\s.।\)]+\s*/, "").trim();
 }
 
 function renderMath(text: string) {
@@ -68,6 +119,136 @@ function renderMath(text: string) {
   return res;
 }
 
+/* ============ Icons (inline SVG) ============ */
+const I = {
+  Gear: ({ size = 18 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+    </svg>
+  ),
+  Close: ({ size = 16 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  ),
+  Chevron: ({ size = 12 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="m6 9 6 6 6-6" />
+    </svg>
+  ),
+  Check: ({ size = 14 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
+  ),
+  X: ({ size = 14 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
+  ),
+  List: ({ size = 14 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <line x1="8" x2="21" y1="6" y2="6" />
+      <line x1="8" x2="21" y1="12" y2="12" />
+      <line x1="8" x2="21" y1="18" y2="18" />
+      <line x1="3" x2="3.01" y1="6" y2="6" />
+      <line x1="3" x2="3.01" y1="12" y2="12" />
+      <line x1="3" x2="3.01" y1="18" y2="18" />
+    </svg>
+  ),
+  Target: ({ size = 14 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" />
+      <circle cx="12" cy="12" r="6" />
+      <circle cx="12" cy="12" r="2" />
+    </svg>
+  ),
+  Bulb: ({ size = 14 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 18h6" />
+      <path d="M10 22h4" />
+      <path d="M12 2a7 7 0 0 0-4 12.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26A7 7 0 0 0 12 2z" />
+    </svg>
+  ),
+  Inbox: ({ size = 44 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+      <path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+    </svg>
+  ),
+  Sun: ({ size = 14 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+    </svg>
+  ),
+  Moon: ({ size = 14 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  ),
+  Monitor: ({ size = 14 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect width="20" height="14" x="2" y="3" rx="2" />
+      <line x1="8" x2="16" y1="21" y2="21" />
+      <line x1="12" x2="12" y1="17" y2="21" />
+    </svg>
+  ),
+  LogOut: ({ size = 14 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" x2="9" y1="12" y2="12" />
+    </svg>
+  ),
+  Search: ({ size = 18 }: { size?: number } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" />
+      <path d="m21 21-4.3-4.3" />
+    </svg>
+  ),
+};
+
+/* ============ Student info (passed via URL on first visit) ============ */
+type StudentInfo = { name: string; phone: string };
+const STUDENT_KEY = 'student';
+
+function readStudent(): StudentInfo | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(STUDENT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.name === 'string' && typeof parsed.phone === 'string') return parsed;
+    return null;
+  } catch { return null; }
+}
+
+function captureStudentFromURL(): StudentInfo | null {
+  if (typeof window === 'undefined') return null;
+  const params = new URLSearchParams(window.location.search);
+  const name = params.get('name');
+  const phone = params.get('phone');
+  if (!name || !phone) return null;
+  const info: StudentInfo = { name: name.trim(), phone: phone.trim() };
+  localStorage.setItem(STUDENT_KEY, JSON.stringify(info));
+  // Strip from URL so the personal info doesn't get bookmarked / re-shared.
+  params.delete('name');
+  params.delete('phone');
+  const newSearch = params.toString();
+  const url = window.location.pathname + (newSearch ? '?' + newSearch : '') + window.location.hash;
+  window.history.replaceState(null, '', url);
+  return info;
+}
+
+function firstName(full: string): string {
+  const trimmed = full.trim();
+  if (!trimmed) return '';
+  return trimmed.split(/\s+/)[0];
+}
+
+/* ============ Editable text ============ */
 function EditableText({ text, onSave, className = "", isEditable = false, style = {} }: { text: string; onSave: (v: string) => void; className?: string; isEditable?: boolean; style?: React.CSSProperties }) {
   const [editing, setEditing] = useState(false);
   const [val, setVal] = useState(text);
@@ -76,60 +257,324 @@ function EditableText({ text, onSave, className = "", isEditable = false, style 
   return <div className={`${className} ${isEditable ? 'editable-field' : ''}`} style={style} onClick={() => { if (isEditable) { setEditing(true); setVal(text); } }} dangerouslySetInnerHTML={{ __html: renderMath(text) }} />;
 }
 
+/* ============ Multi-select bottom-sheet modal ============ */
 function MultiSelectModal({ title, options, selected, onToggle, onClose, onSelectAll, onClear }: { title: string; options: string[]; selected: string[]; onToggle: (v: string) => void; onClose: () => void; onSelectAll: () => void; onClear: () => void }) {
-  return (
-    <div className="modal-overlay" style={{ display: 'flex', zIndex: 1200 }} onClick={onClose}>
+  // Portal to body so `position: fixed` is relative to the viewport, not to
+  // .sticky-top (which has backdrop-filter and would otherwise become the
+  // containing block, anchoring the sheet to the top of the screen).
+  return createPortal(
+    <div className="modal-overlay" style={{ zIndex: 1200 }} onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
+        <div className="modal-handle" />
         <div className="modal-header">
-          <h3 style={{ margin: 0 }}>Filter by {title}</h3>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={onSelectAll}>All</button>
-            <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem' }} onClick={onClear}>Clear</button>
-            <button className="btn btn-secondary" style={{ padding: '0.25rem 0.5rem', fontSize: '0.75rem', background: 'var(--primary)', color: 'white', border: 'none' }} onClick={onClose}>Done</button>
+          <h3>Filter by {title}</h3>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            <button className="filter-btn" style={{ padding: '0.35rem 0.7rem', fontSize: '0.76rem' }} onClick={onSelectAll}>All</button>
+            <button className="filter-btn" style={{ padding: '0.35rem 0.7rem', fontSize: '0.76rem' }} onClick={onClear}>Clear</button>
+            <button className="filter-btn active" style={{ padding: '0.35rem 0.85rem', fontSize: '0.76rem' }} onClick={onClose}>Done</button>
           </div>
         </div>
         <div className="option-grid">
           {options.length > 0 ? options.map((opt: string) => (
             <div key={opt} className={`checkbox-item ${selected.includes(opt) ? 'selected' : ''}`} onClick={() => onToggle(opt)}>{opt}</div>
-          )) : <p style={{ gridColumn: '1/-1', textAlign: 'center', padding: '1rem', color: '#666' }}>No options available with current filters</p>}
+          )) : <p style={{ gridColumn: '1/-1', textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>No options available with current filters</p>}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
-function Sidebar({ isOpen, onClose, settings, onSettingChange }: { isOpen: boolean; onClose: () => void; settings: Settings; onSettingChange: (key: keyof Settings, val: boolean) => void }) {
+/* ============ Sidebar ============ */
+function Sidebar({ isOpen, onClose, settings, onSettingChange, theme, onThemeChange, group, onChangeGroup }: { isOpen: boolean; onClose: () => void; settings: Settings; onSettingChange: (key: keyof Settings, val: boolean) => void; theme: Theme; onThemeChange: (t: Theme) => void; group: Group | null; onChangeGroup: () => void }) {
   return (
     <>
-      <div className={`modal-overlay ${isOpen ? 'open' : ''}`} style={{ display: isOpen ? 'block' : 'none', opacity: 0.5, zIndex: 1050 }} onClick={onClose} />
+      <div className={`modal-overlay ${isOpen ? 'open' : ''}`} style={{ display: isOpen ? 'block' : 'none', zIndex: 1050 }} onClick={onClose} />
       <div id="sidebar" className={isOpen ? 'open' : ''}>
         <div className="sidebar-header">
-          <h3 style={{ fontWeight: 700 }}>View Settings</h3>
-          <button className="close-btn" onClick={onClose}>✕</button>
+          <h3>Settings</h3>
+          <button className="close-btn" onClick={onClose} aria-label="Close settings"><I.Close /></button>
         </div>
-        <div style={{ marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid #e5e7eb' }}>
+
+        {group && (
+          <div className="sidebar-section">
+            <div className="sidebar-label">Group</div>
+            <div className="toggle-row">
+              <span className="toggle-label" style={{ fontFamily: 'var(--font-bn), var(--font-en), serif' }}>{GROUP_LABELS[group]}</span>
+              <button className="filter-btn" style={{ padding: '0.4rem 0.85rem', fontSize: '0.78rem' }} onClick={onChangeGroup}>Change</button>
+            </div>
+          </div>
+        )}
+
+        <div className="sidebar-section">
+          <div className="sidebar-label">Appearance</div>
+          <div className="theme-picker" role="radiogroup" aria-label="Theme">
+            <button role="radio" aria-checked={theme === 'light'} className={theme === 'light' ? 'active' : ''} onClick={() => onThemeChange('light')}><I.Sun /> Light</button>
+            <button role="radio" aria-checked={theme === 'dark'} className={theme === 'dark' ? 'active' : ''} onClick={() => onThemeChange('dark')}><I.Moon /> Dark</button>
+            <button role="radio" aria-checked={theme === 'system'} className={theme === 'system' ? 'active' : ''} onClick={() => onThemeChange('system')}><I.Monitor /> Auto</button>
+          </div>
+        </div>
+
+        <div className="sidebar-section">
+          <div className="sidebar-label">Behavior</div>
           <div className="toggle-row">
-            <div><p style={{ fontSize: '0.9rem', fontWeight: 600 }}>Auto-show Explanation</p><p style={{ fontSize: '0.75rem', color: '#666' }}>After choice</p></div>
+            <div>
+              <div className="toggle-label">Auto-show Explanation</div>
+              <div className="toggle-sub">Reveal after you pick an option</div>
+            </div>
             <label className="switch"><input type="checkbox" checked={settings.autoExp} onChange={e => onSettingChange('autoExp', e.target.checked)} /><span className="slider"></span></label>
           </div>
         </div>
-        <h4 style={{ marginBottom: '1rem', color: '#6b7280', fontSize: '0.75rem', textTransform: 'uppercase' }}>Global Toggles</h4>
-        <div className="toggle-row"><span>Options</span><label className="switch"><input type="checkbox" checked={settings.showOpt} onChange={e => onSettingChange('showOpt', e.target.checked)} /><span className="slider"></span></label></div>
-        <div className="toggle-row"><span>Correct Answer</span><label className="switch"><input type="checkbox" checked={settings.showAns} onChange={e => onSettingChange('showAns', e.target.checked)} /><span className="slider"></span></label></div>
-        <div className="toggle-row"><span>Explanation</span><label className="switch"><input type="checkbox" checked={settings.showExp} onChange={e => onSettingChange('showExp', e.target.checked)} /><span className="slider"></span></label></div>
+
+        <div className="sidebar-section">
+          <div className="sidebar-label">Global toggles</div>
+          <div className="toggle-row">
+            <span className="toggle-label">Options</span>
+            <label className="switch"><input type="checkbox" checked={settings.showOpt} onChange={e => onSettingChange('showOpt', e.target.checked)} /><span className="slider"></span></label>
+          </div>
+          <div className="toggle-row">
+            <span className="toggle-label">Correct Answer</span>
+            <label className="switch"><input type="checkbox" checked={settings.showAns} onChange={e => onSettingChange('showAns', e.target.checked)} /><span className="slider"></span></label>
+          </div>
+          <div className="toggle-row">
+            <span className="toggle-label">Explanation</span>
+            <label className="switch"><input type="checkbox" checked={settings.showExp} onChange={e => onSettingChange('showExp', e.target.checked)} /><span className="slider"></span></label>
+          </div>
+        </div>
       </div>
     </>
   );
 }
 
-function App() {
-  const [isAdmin, setIsAdmin] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      return params.get('admin') === 'true';
+/* ============ Group selector ============ */
+function GroupSelector({ onSelect, onCancel }: { onSelect: (g: Group) => void; onCancel?: () => void }) {
+  return (
+    <div className="group-selector">
+      <div className="group-card-wrap">
+        <div className="group-title">কোন গ্রুপের প্রস্তুতি নিচ্ছো?</div>
+        <div className="group-sub">Choose your stream to tailor your feed.</div>
+        <div className="group-cards">
+          {(Object.keys(GROUP_LABELS) as Group[]).map(g => (
+            <button key={g} className="group-card" onClick={() => onSelect(g)}>
+              <span>
+                {GROUP_LABELS[g]}
+                <span className="group-card-sub">{GROUP_SUBJECTS[g].slice(0, 4).join(' · ')}{GROUP_SUBJECTS[g].length > 4 ? ' …' : ''}</span>
+              </span>
+              <span className="group-card-arrow"><I.Chevron size={16} /></span>
+            </button>
+          ))}
+        </div>
+        {onCancel && (
+          <button type="button" className="auth-back" onClick={onCancel}>← Back</button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ============ Skeleton loader ============ */
+function SkeletonCard() {
+  return (
+    <div className="skeleton-card">
+      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <div className="skeleton-row" style={{ width: '60px' }} />
+        <div className="skeleton-row" style={{ width: '120px' }} />
+        <div className="skeleton-row" style={{ width: '36px', marginLeft: 'auto' }} />
+      </div>
+      <div className="skeleton-row" style={{ width: '85%', height: '16px' }} />
+      <div className="skeleton-row" style={{ width: '70%', height: '16px' }} />
+      <div className="skeleton-row tall" />
+      <div className="skeleton-row tall" />
+    </div>
+  );
+}
+
+/* ============ Admin session (custom — not Supabase Auth) ============ */
+// Password is kept so we can re-verify on every admin write via the Edge
+// Function. localStorage is XSS-exposed; this is the trade-off we picked for
+// "re-send credentials each call" instead of a session-token table.
+type AdminSession = { id: string; username: string; password: string };
+const ADMIN_SESSION_KEY = 'adminSession';
+
+function readAdminSession(): AdminSession | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(ADMIN_SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed.id === 'string' && typeof parsed.username === 'string' && typeof parsed.password === 'string') return parsed;
+    return null;
+  } catch { return null; }
+}
+
+/* ============ Admin proxy caller (Supabase Edge Function) ============ */
+type AdminResult<T = unknown> = { data?: T; error?: string };
+
+async function callAdmin<T = unknown>(op: string, payload: unknown, creds: { username: string; password: string }): Promise<AdminResult<T>> {
+  try {
+    const { data, error } = await supabase.functions.invoke('admin-op', {
+      body: { username: creds.username, password: creds.password, op, payload },
+    });
+    if (error) {
+      // Try to surface the JSON error returned by our function (supabase-js
+      // wraps non-2xx responses in FunctionsHttpError).
+      const ctx = (error as { context?: Response }).context;
+      if (ctx && typeof ctx.json === 'function') {
+        try {
+          const parsed = await ctx.json();
+          if (parsed && typeof parsed.error === 'string') return { error: parsed.error };
+        } catch { /* fall through */ }
+      }
+      return { error: error.message || 'Network error' };
     }
-    return false;
+    if (data && typeof data === 'object' && 'error' in data && (data as { error?: unknown }).error) {
+      return { error: String((data as { error: unknown }).error) };
+    }
+    const payloadOut = (data && typeof data === 'object' && 'data' in data) ? (data as { data: T }).data : (data as T);
+    return { data: payloadOut };
+  } catch (e) {
+    return { error: (e as Error).message || 'Network error' };
+  }
+}
+
+/* ============ Admin login + signup ============ */
+function AdminLogin({ onCancel, onSuccess }: { onCancel: () => void; onSuccess: (s: AdminSession) => void }) {
+  const [mode, setMode] = useState<'signin' | 'create'>('signin');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [adminKey, setAdminKey] = useState('');
+  const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  const handleSignin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setErr('');
+    const { data, error } = await supabase.rpc('admin_login', { p_username: username, p_password: password });
+    setBusy(false);
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+    const row = Array.isArray(data) ? data[0] : data;
+    if (!row || !row.id) {
+      setErr('Invalid username or password.');
+      return;
+    }
+    const session: AdminSession = { id: row.id, username: row.username, password };
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
+    onSuccess(session);
+  };
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setErr('');
+    const { data, error } = await supabase.rpc('admin_signup', {
+      p_admin_key: adminKey,
+      p_username: username,
+      p_password: password,
+    });
+    setBusy(false);
+    if (error) {
+      setErr(error.message);
+      return;
+    }
+    if (!data) {
+      setErr('Sign-up failed.');
+      return;
+    }
+    const session: AdminSession = { id: String(data), username: username.toLowerCase().trim(), password };
+    localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session));
+    onSuccess(session);
+  };
+
+  const switchMode = (next: 'signin' | 'create') => {
+    setErr('');
+    setPassword('');
+    setAdminKey('');
+    setMode(next);
+  };
+
+  return (
+    <div className="auth-screen">
+      <form className="auth-card" onSubmit={mode === 'signin' ? handleSignin : handleCreate}>
+        <h2>{mode === 'signin' ? 'Admin Sign In' : 'Create Admin'}</h2>
+        <p className="auth-sub">
+          {mode === 'signin'
+            ? 'Sign in with your admin credentials.'
+            : 'Use the admin signup key to create a new admin account.'}
+        </p>
+
+        {mode === 'create' && (
+          <div>
+            <label htmlFor="auth-key">Admin Key</label>
+            <input id="auth-key" type="password" autoComplete="off" required value={adminKey} onChange={e => setAdminKey(e.target.value)} />
+          </div>
+        )}
+        <div>
+          <label htmlFor="auth-username">Username</label>
+          <input id="auth-username" type="text" autoCapitalize="none" autoComplete="username" required value={username} onChange={e => setUsername(e.target.value)} />
+        </div>
+        <div>
+          <label htmlFor="auth-pwd">Password</label>
+          <input id="auth-pwd" type="password" autoComplete={mode === 'signin' ? 'current-password' : 'new-password'} required value={password} onChange={e => setPassword(e.target.value)} />
+        </div>
+        {err && <div className="auth-err">{err}</div>}
+        <button type="submit" disabled={busy}>
+          {busy ? 'Working…' : (mode === 'signin' ? 'Sign In' : 'Create Admin')}
+        </button>
+
+        <div className="auth-switch">
+          {mode === 'signin' ? (
+            <button type="button" className="auth-back" onClick={() => switchMode('create')}>
+              Need to create an admin? →
+            </button>
+          ) : (
+            <button type="button" className="auth-back" onClick={() => switchMode('signin')}>
+              ← Have an account? Sign in
+            </button>
+          )}
+        </div>
+        <button type="button" className="auth-back" onClick={onCancel}>← Back to questions</button>
+      </form>
+    </div>
+  );
+}
+
+/* ============ App ============ */
+function App() {
+  // Theme state (academic dark-first; persisted to localStorage)
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') return 'dark';
+    return (localStorage.getItem('theme') as Theme) || 'dark';
   });
+
+  // Admin gating (custom — no Supabase Auth)
+  const [wantsAdmin, setWantsAdmin] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).has('admin');
+  });
+  const [adminSession, setAdminSession] = useState<AdminSession | null>(() => readAdminSession());
+
+  // Student study group (Bengali stream)
+  const [studyGroup, setStudyGroup] = useState<Group | null>(() => readGroup());
+  const [isChoosingGroup, setIsChoosingGroup] = useState(false);
+
+  // Student identity (captured from ?name=&phone= in the URL on first hit;
+  // setter intentionally omitted — captureStudentFromURL persists to
+  // localStorage and the next reload picks up any new URL params).
+  const [student] = useState<StudentInfo | null>(() => captureStudentFromURL() ?? readStudent());
+
+  // Search (debounced)
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -139,7 +584,7 @@ function App() {
   const [totalCount, setTotalCount] = useState(0);
   const [filteredCount, setFilteredCount] = useState(0);
 
-  // Metadata States
+  // Metadata
   const [collegeOptions, setCollegeOptions] = useState<string[]>([]);
   const [subjectOptions, setSubjectOptions] = useState<string[]>([]);
   const [typeOptions] = useState<string[]>(['MCQ', 'SQ']);
@@ -152,8 +597,43 @@ function App() {
 
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
+  const isAdmin = wantsAdmin && !!adminSession;
+
+  // Apply theme + persist + listen to system changes
   useEffect(() => {
-    // 1. Fetch Global Settings (Fonts)
+    // Admin shell needs light tokens regardless (admin styles assume light)
+    if (isAdmin) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      return;
+    }
+    applyTheme(theme);
+    localStorage.setItem('theme', theme);
+    if (theme === 'system') {
+      const mq = window.matchMedia('(prefers-color-scheme: light)');
+      const handler = () => applyTheme('system');
+      mq.addEventListener('change', handler);
+      return () => mq.removeEventListener('change', handler);
+    }
+  }, [theme, isAdmin]);
+
+  const handleSignOut = useCallback(() => {
+    localStorage.removeItem(ADMIN_SESSION_KEY);
+    setAdminSession(null);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('admin');
+    window.history.replaceState(null, '', url.pathname + (url.search ? url.search : '') + url.hash);
+    setWantsAdmin(false);
+  }, []);
+
+  const cancelAdminEntry = useCallback(() => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('admin');
+    window.history.replaceState(null, '', url.pathname + (url.search ? url.search : '') + url.hash);
+    setWantsAdmin(false);
+  }, []);
+
+  // Fetch global settings (fonts), metadata for filters, total count
+  useEffect(() => {
     const fetchSettings = async () => {
       const { data, error } = await supabase.from('settings').select('*').single();
       if (data && !error) {
@@ -162,24 +642,19 @@ function App() {
       }
     };
 
-    // 2. Fetch Metadata and Total Count
     const fetchInitialData = async () => {
-      // Fetch initial total count (fast)
       const { count, error: countError } = await supabase.from('questions').select('*', { count: 'exact', head: true });
       if (!countError) setTotalCount(count || 0);
 
-      // Fetch metadata for filters (handle > 1000 rows)
-      let allMeta: any[] = [];
+      let allMeta: { institution: string; subject: string; year: string }[] = [];
       let from = 0;
       const step = 1000;
       let moreMeta = true;
-
       while (moreMeta) {
         const { data, error: metaError } = await supabase
           .from('questions')
           .select('institution, subject, year')
           .range(from, from + step - 1);
-        
         if (data && !metaError) {
           allMeta = [...allMeta, ...data];
           if (data.length < step) moreMeta = false;
@@ -188,18 +663,16 @@ function App() {
           moreMeta = false;
         }
       }
-
       if (allMeta.length > 0) {
         setCollegeOptions(Array.from(new Set(allMeta.map(q => String(q.institution || "").trim()))).filter(Boolean).sort());
         setSubjectOptions(Array.from(new Set(allMeta.map(q => String(q.subject || "").trim()))).filter(Boolean).sort());
         setYearOptions(Array.from(new Set(allMeta.map(q => String(q.year || "").trim()))).filter(Boolean).sort().reverse());
       }
     };
-    
+
     fetchSettings();
     fetchInitialData();
 
-    // Subscribe to settings changes for real-time global updates
     const settingsSubscription = supabase
       .channel('public:settings')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings' }, payload => {
@@ -208,7 +681,6 @@ function App() {
       })
       .subscribe();
 
-    // Subscribe to questions changes for real-time total count updates
     const questionsSubscription = supabase
       .channel('public:questions_count')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'questions' }, async () => {
@@ -224,82 +696,66 @@ function App() {
   }, []);
 
   const loadQuestions = useCallback(async (isNewSearch = false) => {
+    // Student view requires a group choice before fetching.
+    if (!isAdmin && !studyGroup) return;
+
     const currentPage = isNewSearch ? 0 : page;
     const pageSize = 20;
-    const start = currentPage * pageSize;
-    const end = start + pageSize - 1;
+    const offset = currentPage * pageSize;
 
-    if (isNewSearch) {
-      setLoading(true);
-      setQuestions([]);
-    } else {
-      setIsFetchingMore(true);
-    }
+    if (isNewSearch) { setLoading(true); setQuestions([]); }
+    else { setIsFetchingMore(true); }
 
-    let query = supabase.from('questions').select('*', { count: 'exact' });
+    const params = {
+      p_group_subjects: isAdmin ? null : (studyGroup ? GROUP_SUBJECTS[studyGroup] : null),
+      p_institution_order: INSTITUTION_ORDER,
+      p_inst_filter:    selInst.length > 0 ? selInst : null,
+      p_subject_filter: selSub.length  > 0 ? selSub  : null,
+      p_type_filter:    selType.length > 0 ? selType.map(t => t.toLowerCase()) : null,
+      p_year_filter:    selYear.length > 0 ? selYear : null,
+      p_include_hidden: isAdmin,
+      p_search:         debouncedQuery.trim() || null,
+      p_offset: offset,
+      p_limit: pageSize,
+    };
 
-    // Apply Filters (AND between categories, IN within category)
-    if (selInst.length > 0) query = query.in('institution', selInst);
-    if (selSub.length > 0) query = query.in('subject', selSub);
-    if (selYear.length > 0) query = query.in('year', selYear);
-    if (selType.length > 0) {
-      const types = selType.map(t => t.toLowerCase());
-      query = query.in('type', types);
-    }
+    const { data, error } = await supabase.rpc('fetch_questions_feed', params);
 
-    // Student View: Hide "hidden" questions
-    if (!isAdmin) {
-      query = query.eq('hidden', false);
-    }
-
-    // Apply Sorting (Mirroring local sortQuestions logic as much as possible)
-    query = query
-      .order('institution', { ascending: true })
-      .order('year', { ascending: false })
-      .order('subject', { ascending: true })
-      .order('type', { ascending: true })
-      .order('serial', { ascending: true }) // Note: String sort, may need padding
-      .range(start, end);
-
-    const { data, error, count } = await query;
-
-    if (data && !error) {
-      setQuestions(prev => isNewSearch ? data : [...prev, ...data]);
-      setHasMore(count ? (start + data.length < count) : data.length === pageSize);
-      if (isNewSearch) setFilteredCount(count || 0);
-      
+    if (error) {
+      console.error('[fetch_questions_feed] error:', error, 'params:', params);
+    } else if (data) {
+      const payload = data as { rows?: Question[]; count?: number };
+      const rows = payload.rows ?? [];
+      const count = payload.count ?? 0;
+      console.debug('[fetch_questions_feed] count:', count, 'rows:', rows.length, 'params:', params);
+      setQuestions(prev => isNewSearch ? rows : [...prev, ...rows]);
+      setHasMore(offset + rows.length < count);
+      if (isNewSearch) setFilteredCount(count);
       if (!isNewSearch) setPage(currentPage + 1);
       else setPage(1);
     }
-    
     setLoading(false);
     setIsFetchingMore(false);
-  }, [page, selInst, selSub, selType, selYear, isAdmin]);
+  }, [page, selInst, selSub, selType, selYear, isAdmin, studyGroup, debouncedQuery]);
 
-  // Infinite Scroll Observer
+  // Infinite scroll
   useEffect(() => {
     if (loading || !hasMore || isFetchingMore) return;
-
     const observer = new IntersectionObserver((entries) => {
-      if (entries[0].isIntersecting) {
-        loadQuestions();
-      }
+      if (entries[0].isIntersecting) loadQuestions();
     }, { threshold: 0.1, rootMargin: '400px' });
-
     const sentinel = document.getElementById('scroll-sentinel');
     if (sentinel) observer.observe(sentinel);
-
     return () => observer.disconnect();
   }, [loading, hasMore, isFetchingMore, loadQuestions, isAdmin]);
 
-  // Re-fetch when filters change
+  // Re-fetch on filters / admin / group / search change
   useEffect(() => {
-    loadQuestions(true);
-  }, [selInst, selSub, selType, selYear, isAdmin]);
+    if (isAdmin || studyGroup) loadQuestions(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selInst, selSub, selType, selYear, isAdmin, studyGroup, debouncedQuery]);
 
-  const updateQuestions = (newQuestions: Question[]) => {
-    setQuestions(newQuestions);
-  };
+  const updateQuestions = (newQuestions: Question[]) => setQuestions(newQuestions);
 
   const handleSettingChange = (key: keyof Settings, val: boolean) => {
     setSettings(prev => {
@@ -310,20 +766,48 @@ function App() {
     });
   };
 
+  const handleThemeChange = (t: Theme) => setTheme(t);
+
   const clearAllFilters = () => {
-    setSelInst([]);
-    setSelSub([]);
-    setSelType([]);
-    setSelYear([]);
+    setSelInst([]); setSelSub([]); setSelType([]); setSelYear([]);
   };
+
+  const pickGroup = (g: Group) => {
+    localStorage.setItem(GROUP_KEY, g);
+    setStudyGroup(g);
+    setSelSub([]); // previously selected subjects may not exist in the new group
+    setIsChoosingGroup(false);
+  };
+
+  // Subjects shown in the student-side filter modal — intersect DB subjects
+  // with the group's allow-list, preserving the group's display order.
+  const studentSubjectOptions = studyGroup
+    ? GROUP_SUBJECTS[studyGroup].filter(s => subjectOptions.includes(s))
+    : subjectOptions;
+
+  // Render: admin login if requested but no session yet
+  if (wantsAdmin && !adminSession) {
+    return <AdminLogin onCancel={cancelAdminEntry} onSuccess={(s) => setAdminSession(s)} />;
+  }
+
+  // Student must pick a group before seeing the feed
+  if (!isAdmin && (!studyGroup || isChoosingGroup)) {
+    return (
+      <GroupSelector
+        onSelect={pickGroup}
+        onCancel={isChoosingGroup && studyGroup ? () => setIsChoosingGroup(false) : undefined}
+      />
+    );
+  }
 
   return (
     <div className={isAdmin ? "" : "app-container"}>
-      {isAdmin ? (
-        <AdminDashboard 
-          questions={questions} 
-          onUpdate={updateQuestions} 
-          onExit={() => setIsAdmin(false)}
+      {isAdmin && adminSession ? (
+        <AdminDashboard
+          questions={questions}
+          onUpdate={updateQuestions}
+          onExit={handleSignOut}
+          session={adminSession}
           collegeOptions={collegeOptions}
           subjectOptions={subjectOptions}
           typeOptions={typeOptions}
@@ -341,13 +825,44 @@ function App() {
       ) : (
         <>
           <div className="sticky-top">
-            <header onClick={e => e.detail === 5 && setIsAdmin(true)}>
-              <h2>Admission Prep</h2>
-              <button className="menu-btn" onClick={() => setIsSidebarOpen(true)} style={{ cursor: 'pointer' }}>⚙️</button>
+            <header>
+              <h2>{student?.name ? `Hi, ${firstName(student.name)}!` : 'Admission Prep'}</h2>
+              {searchOpen && (
+                <div className="search-bar search-bar-inline">
+                  <I.Search size={16} />
+                  <input
+                    type="text"
+                    placeholder="Search…"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                  {searchQuery && (
+                    <button className="search-clear" onClick={() => setSearchQuery('')} aria-label="Clear search">
+                      <I.Close size={14} />
+                    </button>
+                  )}
+                </div>
+              )}
+              <div className="header-actions">
+                <button
+                  className={`menu-btn ${searchOpen ? 'active' : ''}`}
+                  onClick={() => {
+                    if (searchOpen) { setSearchQuery(''); setDebouncedQuery(''); }
+                    setSearchOpen(o => !o);
+                  }}
+                  aria-label={searchOpen ? 'Close search' : 'Search'}
+                >
+                  {searchOpen ? <I.Close /> : <I.Search />}
+                </button>
+                <button className="menu-btn" onClick={() => setIsSidebarOpen(true)} aria-label="Open settings">
+                  <I.Gear />
+                </button>
+              </div>
             </header>
-            <FilterBar 
+            <FilterBar
               collegeOptions={collegeOptions}
-              subjectOptions={subjectOptions}
+              subjectOptions={studentSubjectOptions}
               typeOptions={typeOptions}
               yearOptions={yearOptions}
               selInst={selInst} setSelInst={setSelInst}
@@ -359,33 +874,41 @@ function App() {
           </div>
           <main className="content-feed">
             {loading ? (
-              <p style={{ textAlign: 'center', padding: '2rem' }}>Loading questions...</p>
+              <>
+                <SkeletonCard />
+                <SkeletonCard />
+                <SkeletonCard />
+              </>
             ) : questions.length > 0 ? (
               <>
                 {questions.map((q, idx) => (
                   <QuestionCard key={`${q.id}-${idx}`} question={q} settings={settings} />
                 ))}
                 <div id="scroll-sentinel" style={{ height: '20px', margin: '10px 0' }} />
-                {hasMore && (
-                  <div style={{ padding: '2rem', textAlign: 'center' }}>
-                    <p style={{ color: '#666', fontSize: '0.8rem' }}>{isFetchingMore ? "Loading more..." : "Scroll for more"}</p>
-                  </div>
-                )}
+                <div className="feed-end">
+                  {isFetchingMore ? 'Loading more…' : (hasMore ? 'Scroll for more' : `${filteredCount} question${filteredCount === 1 ? '' : 's'} · end of feed`)}
+                </div>
               </>
             ) : (
-              <p style={{ textAlign: 'center', padding: '2rem' }}>No results match your filters.</p>
+              <div className="empty-state">
+                <I.Inbox />
+                <div className="empty-state-title">No questions match your filters</div>
+                <div className="empty-state-msg">Try removing a filter or clearing them all.</div>
+                <button onClick={clearAllFilters}>Clear filters</button>
+              </div>
             )}
           </main>
-          <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} settings={settings} onSettingChange={handleSettingChange} />
+          <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} settings={settings} onSettingChange={handleSettingChange} theme={theme} onThemeChange={handleThemeChange} group={studyGroup} onChangeGroup={() => { setIsSidebarOpen(false); setIsChoosingGroup(true); }} />
         </>
       )}
     </div>
   );
 }
 
+/* ============ Filter Bar ============ */
 function FilterBar({ collegeOptions, subjectOptions, typeOptions, yearOptions, selInst, setSelInst, selSub, setSelSub, selType, setSelType, selYear, setSelYear, onClear }: { collegeOptions: string[]; subjectOptions: string[]; typeOptions: string[]; yearOptions: string[]; selInst: string[]; setSelInst: React.Dispatch<React.SetStateAction<string[]>>; selSub: string[]; setSelSub: React.Dispatch<React.SetStateAction<string[]>>; selType: string[]; setSelType: React.Dispatch<React.SetStateAction<string[]>>; selYear: string[]; setSelYear: React.Dispatch<React.SetStateAction<string[]>>; onClear: () => void }) {
   const [modal, setModal] = useState<string | null>(null);
-  
+
   const toggle = (setter: React.Dispatch<React.SetStateAction<string[]>>, val: string) => {
     setter((prev: string[]) => prev.includes(val) ? prev.filter(i => i !== val) : [...prev, val]);
   };
@@ -396,29 +919,27 @@ function FilterBar({ collegeOptions, subjectOptions, typeOptions, yearOptions, s
 
   return (
     <div className="filter-row" style={{ gridTemplateColumns: hasAnyFilter ? 'repeat(4, 1fr) 40px' : 'repeat(4, 1fr)' }}>
-      <button className={`filter-btn ${selInst.length ? 'active' : ''}`} onClick={() => setModal('Inst')}>{label('Inst', selInst)} ▾</button>
-      <button className={`filter-btn ${selSub.length ? 'active' : ''}`} onClick={() => setModal('Subj')}>{label('Subj', selSub)} ▾</button>
-      <button className={`filter-btn ${selType.length ? 'active' : ''}`} onClick={() => setModal('Type')}>{label('Type', selType)} ▾</button>
-      <button className={`filter-btn ${selYear.length ? 'active' : ''}`} onClick={() => setModal('Year')}>{label('Year', selYear)} ▾</button>
-      {hasAnyFilter && <button className="filter-btn" onClick={onClear} title="Clear all" style={{ color: 'var(--wrong)' }}>✕</button>}
+      <button className={`filter-btn ${selInst.length ? 'active' : ''}`} onClick={() => setModal('Inst')}><span>{label('Inst', selInst)}</span><I.Chevron /></button>
+      <button className={`filter-btn ${selSub.length ? 'active' : ''}`} onClick={() => setModal('Subj')}><span>{label('Subj', selSub)}</span><I.Chevron /></button>
+      <button className={`filter-btn ${selType.length ? 'active' : ''}`} onClick={() => setModal('Type')}><span>{label('Type', selType)}</span><I.Chevron /></button>
+      <button className={`filter-btn ${selYear.length ? 'active' : ''}`} onClick={() => setModal('Year')}><span>{label('Year', selYear)}</span><I.Chevron /></button>
+      {hasAnyFilter && <button className="filter-btn filter-clear" onClick={onClear} title="Clear all filters" aria-label="Clear all filters"><I.Close /></button>}
 
-      {modal === 'Inst' && <MultiSelectModal title="College" options={collegeOptions} selected={selInst} onToggle={(v:string) => toggle(setSelInst, v)} onSelectAll={() => setSelInst(collegeOptions)} onClear={() => setSelInst([])} onClose={() => setModal(null)} />}
-      {modal === 'Subj' && <MultiSelectModal title="Subject" options={subjectOptions} selected={selSub} onToggle={(v:string) => toggle(setSelSub, v)} onSelectAll={() => setSelSub(subjectOptions)} onClear={() => setSelSub([])} onClose={() => setModal(null)} />}
-      {modal === 'Type' && <MultiSelectModal title="Type" options={typeOptions} selected={selType} onToggle={(v:string) => toggle(setSelType, v)} onSelectAll={() => setSelType(typeOptions)} onClear={() => setSelType([])} onClose={() => setModal(null)} />}
-      {modal === 'Year' && <MultiSelectModal title="Year" options={yearOptions} selected={selYear} onToggle={(v:string) => toggle(setSelYear, v)} onSelectAll={() => setSelYear(yearOptions)} onClear={() => setSelYear([])} onClose={() => setModal(null)} />}
+      {modal === 'Inst' && <MultiSelectModal title="College" options={collegeOptions} selected={selInst} onToggle={(v: string) => toggle(setSelInst, v)} onSelectAll={() => setSelInst(collegeOptions)} onClear={() => setSelInst([])} onClose={() => setModal(null)} />}
+      {modal === 'Subj' && <MultiSelectModal title="Subject" options={subjectOptions} selected={selSub} onToggle={(v: string) => toggle(setSelSub, v)} onSelectAll={() => setSelSub(subjectOptions)} onClear={() => setSelSub([])} onClose={() => setModal(null)} />}
+      {modal === 'Type' && <MultiSelectModal title="Type" options={typeOptions} selected={selType} onToggle={(v: string) => toggle(setSelType, v)} onSelectAll={() => setSelType(typeOptions)} onClear={() => setSelType([])} onClose={() => setModal(null)} />}
+      {modal === 'Year' && <MultiSelectModal title="Year" options={yearOptions} selected={selYear} onToggle={(v: string) => toggle(setSelYear, v)} onSelectAll={() => setSelYear(yearOptions)} onClear={() => setSelYear([])} onClose={() => setModal(null)} />}
     </div>
   );
 }
 
+/* ============ Question Card ============ */
 function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { question: Question; isAdmin?: boolean; onUpdateField?: (f: keyof Question, v: any) => void; settings?: Settings }) {
   const [sel, setSel] = useState<number | null>(null);
-  
-  // States that need to sync with settings/isAdmin
   const [sol, setSol] = useState(false);
   const [optRevealed, setOptRevealed] = useState(true);
   const [ansRevealed, setAnsRevealed] = useState(false);
 
-  // Sync state when settings or isAdmin changes
   useEffect(() => {
     if (isAdmin) {
       setOptRevealed(true);
@@ -431,59 +952,60 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
     }
   }, [isAdmin, settings]);
 
-  // Reset local selection when question changes
-  useEffect(() => {
-    setSel(null);
-  }, [question.id]);
+  useEffect(() => { setSel(null); }, [question.id]);
 
   const handleOptionClick = (idx: number) => {
     if (isAdmin) return;
-    // Allow selection if no option is selected OR if the answer is currently hidden
     if (sel === null || !ansRevealed) {
       setSel(idx);
       setAnsRevealed(true);
-      if (settings?.autoExp) { setSol(true); }
+      if (settings?.autoExp) setSol(true);
     }
   };
 
   const showLabel = !!question.stimulus || (question.parts && question.parts.length > 1);
+  const subjectColor = SUBJECT_COLORS[question.subject] || 'var(--text-faint)';
 
   return (
-    <div className={`card ${question.hidden ? 'read' : ''}`}>
+    <article className={`card ${question.hidden ? 'read' : ''}`}>
       <div className="card-meta">
-        <span className="badge" style={{ background: SUBJECT_COLORS[question.subject] || '#666', color: 'white' }}>{question.subject}</span>
-        <span className="badge" style={{ background: '#f1f5f9' }}>{question.institution} • {question.year}</span>
-        {question.serial && <span className="badge" style={{ background: '#e2e8f0', color: '#475569', fontWeight: 700 }}>#{question.serial}</span>}
+        <span className="badge badge-subject" style={{ background: subjectColor }}>{question.subject}</span>
+        <span className="badge-meta">{question.institution} · {question.year}</span>
+        <div className="card-meta-end">
+          {question.serial && <span className="badge-serial">#{question.serial}</span>}
+        </div>
       </div>
-      <EditableText className="card-header-main" text={question.type === 'mcq' ? (question.question || "") : (question.stimulus || "")} isEditable={isAdmin} onSave={(v:string) => onUpdateField?.(question.type === 'mcq' ? 'question' : 'stimulus', v)} />
+      <EditableText className="card-header-main" text={question.type === 'mcq' ? (question.question || "") : (question.stimulus || "")} isEditable={isAdmin} onSave={(v: string) => onUpdateField?.(question.type === 'mcq' ? 'question' : 'stimulus', v)} />
       {question.type === 'mcq' ? (
         <>
           {(optRevealed || isAdmin) && (
             <div className="section">
               {question.options?.map((opt: string, i: number) => {
                 let cl = 'option';
-                // Highlight only if answer is revealed or in admin preview
                 if (ansRevealed || isAdmin) {
                   if (i === question.answer_index) cl += ' correct-reveal';
                   else if (i === sel) cl += ' wrong-reveal';
                 }
-                // Option is disabled only if an answer is already being revealed and it's not admin
                 const isInteractionDisabled = ansRevealed && !isAdmin;
+                const showCheck = (ansRevealed || isAdmin) && i === question.answer_index;
+                const showCross = (ansRevealed || isAdmin) && i === sel && sel !== question.answer_index;
                 return (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {isAdmin && (
-                      <input 
-                        type="radio" 
-                        name={`q-${question.id}-ans`} 
-                        checked={question.answer_index === i} 
+                      <input
+                        type="radio"
+                        name={`q-${question.id}-ans`}
+                        checked={question.answer_index === i}
                         onChange={() => onUpdateField?.('answer_index', i)}
                         title="Set as correct answer"
-                        style={{ cursor: 'pointer', width: '18px', height: '18px' }}
+                        style={{ cursor: 'pointer', width: '18px', height: '18px', accentColor: 'var(--primary)' }}
                       />
                     )}
                     <button className={cl} onClick={() => handleOptionClick(i)} disabled={isInteractionDisabled} style={{ flex: 1 }}>
-                      <strong>{String.fromCharCode(65+i)})</strong>
-                      <EditableText text={opt} isEditable={isAdmin} style={{ flex: 1, marginLeft: '0.5rem' }} onSave={(v:string) => { const o = [...(question.options || [])]; o[i] = v; onUpdateField?.('options', o); }} />
+                      <strong>{String.fromCharCode(65 + i)}</strong>
+                      <EditableText text={opt} isEditable={isAdmin} onSave={(v: string) => { const o = [...(question.options || [])]; o[i] = v; onUpdateField?.('options', o); }} />
+                      {showCheck && <span className="option-icon"><I.Check /></span>}
+                      {showCross && <span className="option-icon"><I.X /></span>}
                     </button>
                   </div>
                 );
@@ -493,18 +1015,18 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
           {(ansRevealed && !optRevealed && !isAdmin) && (
             <div className="section">
               <div className="section-title">Correct Answer</div>
-              <div style={{ fontWeight: 600, color: '#166534', padding: '0.75rem', background: 'var(--correct-bg)', borderRadius: '8px', border: '1px solid var(--correct)', fontSize: '0.9rem' }}>
-                <strong>{String.fromCharCode(65 + (question.answer_index || 0))}) </strong>
-                <EditableText 
-                  text={question.options?.[question.answer_index || 0] || ""} 
-                  isEditable={false} 
-                  style={{ display: 'inline' }} 
-                  onSave={() => {}}
-                />
+              <div className="answer-box">
+                <strong>{String.fromCharCode(65 + (question.answer_index || 0))}</strong>
+                <EditableText text={question.options?.[question.answer_index || 0] || ""} isEditable={false} onSave={() => {}} />
               </div>
             </div>
           )}
-          {(sol || isAdmin) && question.explanation && <div className="section"><div className="section-title">Explanation</div><EditableText text={question.explanation} isEditable={isAdmin} style={{ fontSize: '0.9rem', color: '#374151' }} onSave={(v:string) => onUpdateField?.('explanation', v)} /></div>}
+          {(sol || isAdmin) && question.explanation && (
+            <div className="section">
+              <div className="section-title">Explanation</div>
+              <EditableText text={question.explanation} isEditable={isAdmin} style={{ fontSize: '0.94rem', color: 'var(--text)', lineHeight: 1.6 }} onSave={(v: string) => onUpdateField?.('explanation', v)} />
+            </div>
+          )}
         </>
       ) : (
         <>
@@ -512,42 +1034,57 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
             {(question.parts || []).map((p: { label: string; question: string; mark: number }, i: number) => (
               <div key={i} className="cq-part">
                 {showLabel && <strong>{p.label || "?"})</strong>}
-                <EditableText text={p.question || ""} isEditable={isAdmin} style={{ display: 'inline', marginLeft: showLabel ? '0.5rem' : '0' }} onSave={(v:string) => { const pts = [...(question.parts || [])]; pts[i] = { ...pts[i], question: v }; onUpdateField?.('parts', pts); }} />
-                <span style={{ fontSize: '0.7rem', color: '#666', marginLeft: '0.5rem' }}>[{p.mark || 0}]</span>
+                <EditableText text={p.question || ""} isEditable={isAdmin} style={{ display: 'inline' }} onSave={(v: string) => { const pts = [...(question.parts || [])]; pts[i] = { ...pts[i], question: v }; onUpdateField?.('parts', pts); }} />
+                <span className="cq-mark">[{p.mark || 0}]</span>
               </div>
             ))}
             {isAdmin && (!question.parts || question.parts.length === 0) && !question.stimulus && <p style={{ color: 'var(--wrong)', fontSize: '0.8rem' }}>⚠️ Missing parts and stimulus</p>}
           </div>
-          {(sol || isAdmin) && <div className="section"><div className="section-title">Solution</div><EditableText text={question.solution || ""} isEditable={isAdmin} style={{ fontSize: '0.9rem', color: '#374151' }} onSave={(v:string) => onUpdateField?.('solution', v)} /></div>}
+          {(sol || isAdmin) && (
+            <div className="section">
+              <div className="section-title">Solution</div>
+              <EditableText text={question.solution || ""} isEditable={isAdmin} style={{ fontSize: '0.94rem', color: 'var(--text)', lineHeight: 1.6 }} onSave={(v: string) => onUpdateField?.('solution', v)} />
+            </div>
+          )}
         </>
       )}
       {!isAdmin && (
         question.type === 'mcq' ? (
           <div className="card-footer">
-            <button className={`toggle-btn ${optRevealed ? 'active' : ''}`} onClick={() => setOptRevealed(!optRevealed)}><span>📝</span> Options</button>
+            <button className={`toggle-btn ${optRevealed ? 'active' : ''}`} onClick={() => setOptRevealed(!optRevealed)}>
+              <I.List /> Options
+            </button>
             <button className={`toggle-btn ${ansRevealed ? 'active' : ''}`} onClick={() => {
               const newVal = !ansRevealed;
               setAnsRevealed(newVal);
               if (!newVal) setSol(false);
-            }}><span>🎯</span> Answer</button>
+            }}>
+              <I.Target /> Answer
+            </button>
             <button className={`toggle-btn ${sol ? 'active' : ''}`} onClick={() => {
               const newVal = !sol;
               setSol(newVal);
               if (newVal) setAnsRevealed(true);
-            }}><span>💡</span> Explain</button>
+            }}>
+              <I.Bulb /> Explain
+            </button>
           </div>
         ) : (
-          <div className="sq-footer" onClick={() => setSol(!sol)}><span style={{ color: sol ? 'var(--primary)' : 'var(--text-muted)', fontWeight: 700, fontSize: '0.85rem' }}>{sol ? '💡 Hide Solution' : '💡 View Solution'}</span></div>
+          <div className={`sq-footer ${sol ? 'active' : ''}`} onClick={() => setSol(!sol)}>
+            <I.Bulb /> {sol ? 'Hide Solution' : 'View Solution'}
+          </div>
         )
       )}
-    </div>
+    </article>
   );
 }
 
-function AdminDashboard({ 
-  questions, 
-  onUpdate, 
+/* ============ Admin Dashboard (writes route through Edge Function) ============ */
+function AdminDashboard({
+  questions,
+  onUpdate,
   onExit,
+  session,
   collegeOptions,
   subjectOptions,
   typeOptions,
@@ -561,10 +1098,11 @@ function AdminDashboard({
   isLoadingMore,
   totalCount,
   filteredCount
-}: { 
-  questions: Question[]; 
-  onUpdate: (qs: Question[]) => void; 
+}: {
+  questions: Question[];
+  onUpdate: (qs: Question[]) => void;
   onExit: () => void;
+  session: AdminSession;
   collegeOptions: string[];
   subjectOptions: string[];
   typeOptions: string[];
@@ -579,6 +1117,16 @@ function AdminDashboard({
   totalCount: number;
   filteredCount: number;
 }) {
+  // Wrap callAdmin so that an invalid-credentials response auto-signs-out.
+  const adminCall = useCallback(async <T = unknown>(op: string, payload: unknown): Promise<AdminResult<T>> => {
+    const r = await callAdmin<T>(op, payload, session);
+    if (r.error === 'Invalid credentials') {
+      alert('Your admin session is no longer valid. Please sign in again.');
+      onExit();
+    }
+    return r;
+  }, [session, onExit]);
+
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState("");
   const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
@@ -595,7 +1143,6 @@ function AdminDashboard({
     }
   };
 
-  // Font Management
   const [fontBn, setFontBn] = useState("'Noto Serif Bengali', serif");
   const [fontEn, setFontEn] = useState("'Times New Roman', serif");
 
@@ -611,10 +1158,8 @@ function AdminDashboard({
   }, []);
 
   const saveSettings = async () => {
-    const { error: upsertError } = await supabase
-      .from('settings')
-      .upsert({ id: 1, font_bn: fontBn, font_en: fontEn });
-    if (upsertError) alert("Error saving settings: " + upsertError.message);
+    const r = await adminCall('update_settings', { font_bn: fontBn, font_en: fontEn });
+    if (r.error) alert("Error saving settings: " + r.error);
     else alert("Global settings saved!");
   };
 
@@ -623,20 +1168,15 @@ function AdminDashboard({
       alert("Please update preview first to validate your JSON.");
       return;
     }
-    
-    // Schema now matches perfectly
-    const toSave = previewQuestions;
-
-    const { data, error: insertError } = await supabase.from('questions').insert(toSave).select();
-    if (insertError) alert("Error saving questions: " + insertError.message);
-    else {
-      alert("Questions saved to Supabase!");
-      if (data) {
-        onUpdate(sortQuestions([...questions, ...data]));
-      }
-      setJsonInput("");
-      setPreviewQuestions([]);
+    const r = await adminCall<Question[]>('insert_questions', previewQuestions);
+    if (r.error) {
+      alert("Error saving questions: " + r.error);
+      return;
     }
+    alert("Questions saved to Supabase!");
+    if (r.data) onUpdate(sortQuestions([...questions, ...r.data]));
+    setJsonInput("");
+    setPreviewQuestions([]);
   };
 
   const processJson = () => {
@@ -659,26 +1199,18 @@ function AdminDashboard({
     setJsonInput(JSON.stringify(q, null, 2));
     setPreviewQuestions([q]);
     setError("");
-    window.scrollTo(0,0);
+    window.scrollTo(0, 0);
   };
 
   const handleToggleHidden = async (q: Question) => {
     const newHidden = !q.hidden;
-    const { error: updateError } = await supabase
-      .from('questions')
-      .update({ hidden: newHidden })
-      .eq('id', q.id);
-
-    if (updateError) {
-      alert("Error updating visibility: " + updateError.message);
-    } else {
-      onUpdate(questions.map((item: Question) => item.id === q.id ? { ...item, hidden: newHidden } : item));
-    }
+    const r = await adminCall('toggle_question_hidden', { id: q.id, hidden: newHidden });
+    if (r.error) alert("Error updating visibility: " + r.error);
+    else onUpdate(questions.map((item: Question) => item.id === q.id ? { ...item, hidden: newHidden } : item));
   };
 
   return (
     <div className="admin-layout">
-      {/* Left Column: Question List */}
       <div className="admin-question-list-column">
         <div className="admin-header">
           <div>
@@ -687,17 +1219,17 @@ function AdminDashboard({
               Total Questions in DB: <strong>{totalCount}</strong>
             </p>
           </div>
-          <button className="btn btn-secondary" onClick={onExit}>Exit Admin</button>
+          <button className="btn btn-secondary" onClick={onExit} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.85rem' }}><I.LogOut /> Sign Out</button>
         </div>
-        
+
         <div className="sticky-filter-section">
           <div style={{ marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h4 style={{ margin: 0 }}>Active Filters (<strong>{filteredCount}</strong> matches found)</h4>
-            { (selInst.length > 0 || selSub.length > 0 || selType.length > 0 || selYear.length > 0) && (
+            {(selInst.length > 0 || selSub.length > 0 || selType.length > 0 || selYear.length > 0) && (
               <button className="btn-text" onClick={onClear} style={{ fontSize: '0.7rem', color: 'var(--wrong)' }}>Clear All</button>
             )}
           </div>
-          <FilterBar 
+          <FilterBar
             collegeOptions={collegeOptions}
             subjectOptions={subjectOptions}
             typeOptions={typeOptions}
@@ -714,15 +1246,15 @@ function AdminDashboard({
           {questions.map((q: Question, idx: number) => (
             <div key={`${q.id}-${idx}`} className="admin-card-wrapper">
               <div className="admin-card-actions">
-                <button 
-                  className={`btn ${q.hidden ? 'btn-secondary' : 'btn-primary'}`} 
+                <button
+                  className={`btn ${q.hidden ? 'btn-secondary' : 'btn-primary'}`}
                   style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}
                   onClick={() => handleToggleHidden(q)}
                 >
                   {q.hidden ? '👁️ Show' : '🚫 Hide'}
                 </button>
-                <button 
-                  className="btn btn-secondary" 
+                <button
+                  className="btn btn-secondary"
                   style={{ fontSize: '0.7rem', padding: '0.25rem 0.5rem' }}
                   onClick={() => handleJsonEditRequest(q)}
                 >
@@ -730,22 +1262,15 @@ function AdminDashboard({
                 </button>
                 {q.hidden && <span className="hidden-badge">HIDDEN</span>}
               </div>
-              <QuestionCard 
-                question={q} 
-                isAdmin={true} 
-                settings={DEFAULT_SETTINGS} 
+              <QuestionCard
+                question={q}
+                isAdmin={true}
+                settings={DEFAULT_SETTINGS}
                 onUpdateField={async (f, v) => {
                   const updatedQuestion = { ...q, [f]: v };
-                  const { error: updateError } = await supabase
-                    .from('questions')
-                    .update({ [f]: v })
-                    .eq('id', q.id);
-                  
-                  if (updateError) {
-                    alert("Error saving change: " + updateError.message);
-                  } else {
-                    onUpdate(questions.map(item => item.id === q.id ? updatedQuestion : item));
-                  }
+                  const r = await adminCall('update_question', { id: q.id, fields: { [f]: v } });
+                  if (r.error) alert("Error saving change: " + r.error);
+                  else onUpdate(questions.map(item => item.id === q.id ? updatedQuestion : item));
                 }}
               />
             </div>
@@ -760,7 +1285,6 @@ function AdminDashboard({
         </div>
       </div>
 
-      {/* Right Column: Editor and Preview */}
       <div className="admin-editor-column">
         <div className="admin-section">
           <h4>Typography Settings</h4>
@@ -793,10 +1317,10 @@ function AdminDashboard({
             <h4 style={{ margin: 0 }}>JSON Editor</h4>
             <button className="btn btn-secondary" onClick={copyPrompt} style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>📋 Copy Prompt</button>
           </div>
-          <textarea 
-            className="json-textarea" 
-            placeholder="Paste JSON here..." 
-            value={jsonInput} 
+          <textarea
+            className="json-textarea"
+            placeholder="Paste JSON here..."
+            value={jsonInput}
             onChange={e => setJsonInput(e.target.value)}
             style={{ flex: 1, minHeight: '250px' }}
           />
@@ -807,36 +1331,32 @@ function AdminDashboard({
             <button className="btn btn-secondary" onClick={() => { setJsonInput(""); setPreviewQuestions([]); setError(""); }}>Reset</button>
           </div>
         </div>
-        
+
         <div className="preview-panel">
           <span className="preview-label">Live Preview</span>
           <div className="content-feed">
             {previewQuestions.map((q, i) => (
               <div key={i} className="admin-card-wrapper">
-                <QuestionCard 
-                  question={q} 
-                  isAdmin 
-                  onUpdateField={(f: keyof Question, v: any) => { 
-                    const u = [...previewQuestions]; 
-                    u[i] = { ...u[i], [f]: v }; 
-                    setPreviewQuestions(u); 
-                    setJsonInput(JSON.stringify(u.length === 1 && !jsonInput.startsWith('[') ? u[0] : u, null, 2)); 
-                  }} 
+                <QuestionCard
+                  question={q}
+                  isAdmin
+                  onUpdateField={(f: keyof Question, v: any) => {
+                    const u = [...previewQuestions];
+                    u[i] = { ...u[i], [f]: v };
+                    setPreviewQuestions(u);
+                    setJsonInput(JSON.stringify(u.length === 1 && !jsonInput.startsWith('[') ? u[0] : u, null, 2));
+                  }}
                 />
                 {q.id && (
                   <div style={{ padding: '0.5rem', display: 'flex', justifyContent: 'flex-end' }}>
-                    <button 
-                      className="btn btn-primary" 
+                    <button
+                      className="btn btn-primary"
                       style={{ fontSize: '0.75rem', padding: '0.25rem 0.75rem' }}
                       onClick={async () => {
-                        const { error: updateError } = await supabase
-                          .from('questions')
-                          .update(q)
-                          .eq('id', q.id);
-                        
-                        if (updateError) {
-                          alert("Error saving: " + updateError.message);
-                        } else {
+                        const { id, ...fields } = q;
+                        const r = await adminCall('update_question', { id, fields });
+                        if (r.error) alert("Error saving: " + r.error);
+                        else {
                           alert("Saved successfully!");
                           onUpdate(questions.map(item => item.id === q.id ? q : item));
                         }
