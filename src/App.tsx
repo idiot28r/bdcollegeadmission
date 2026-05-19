@@ -721,9 +721,16 @@ function App() {
     if (!feed) return;
 
     let startX = 0;
+    let startY = 0;
     let currentX = 0;
     let swipeCard: HTMLElement | null = null;
     let active = false;
+    // Until the first ~6px of movement, we don't know if this is a horizontal
+    // swipe (toggle read) or a vertical scroll. Wait, then commit. If vertical
+    // dominates, release the card and let the browser scroll cleanly.
+    type Dir = 'undecided' | 'horizontal' | 'vertical';
+    let dir: Dir = 'undecided';
+    const DIRECTION_LOCK_PX = 6;
 
     const onStart = (e: TouchEvent) => {
       const target = e.target as HTMLElement | null;
@@ -731,31 +738,51 @@ function App() {
       if (!card) return;
       swipeCard = card;
       startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
       currentX = startX;
       active = true;
+      dir = 'undecided';
       card.style.transition = 'none';
     };
     const onMove = (e: TouchEvent) => {
       if (!active || !swipeCard) return;
-      currentX = e.touches[0].clientX;
-      swipeCard.style.transform = `translateX(${currentX - startX}px)`;
+      const t = e.touches[0];
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+
+      if (dir === 'undecided') {
+        const ax = Math.abs(dx);
+        const ay = Math.abs(dy);
+        if (ax < DIRECTION_LOCK_PX && ay < DIRECTION_LOCK_PX) return; // not enough yet
+        if (ay >= ax) {
+          // Vertical scroll. Hand the gesture back to the browser.
+          dir = 'vertical';
+          swipeCard.style.transform = '';
+          active = false;
+          swipeCard = null;
+          return;
+        }
+        dir = 'horizontal';
+      }
+
+      currentX = t.clientX;
+      swipeCard.style.transform = `translateX(${dx}px)`;
     };
     const onEnd = () => {
-      if (!active || !swipeCard) return;
-      const diffX = currentX - startX;
+      if (!swipeCard) { active = false; dir = 'undecided'; return; }
       const card = swipeCard;
+      const diffX = currentX - startX;
       card.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.3s, filter 0.3s';
       card.style.transform = 'translateX(0)';
-      if (Math.abs(diffX) > 80) {
+      if (dir === 'horizontal' && Math.abs(diffX) > 80) {
         // Toggle the class on the DOM synchronously (like the reference does)
-        // so opacity/filter animate in the same frame as the snap-back. The
-        // toggleRead call below updates React state for persistence; by the
-        // time React re-renders, the className it sets matches the DOM.
+        // so opacity/filter animate in the same frame as the snap-back.
         card.classList.toggle('read');
         const qid = card.getAttribute('data-question-id');
         if (qid) toggleReadRef.current(qid);
       }
       active = false;
+      dir = 'undecided';
       swipeCard = null;
     };
 
