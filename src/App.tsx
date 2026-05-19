@@ -1348,8 +1348,14 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
         className={`card-swipe-bg ${dragX > 0 ? 'dir-right' : 'dir-left'} ${isArmed ? 'armed' : ''} ${isRead ? 'unmark' : ''}`}
         aria-hidden="true"
       >
-        {isRead ? <I.Undo size={18} /> : <I.Check size={18} />}
-        <span>{isRead ? 'অপঠিত' : 'পঠিত'}</span>
+        {isRead ? (
+          <I.Undo size={18} />
+        ) : (
+          <>
+            <I.Check size={18} />
+            <span>পঠিত</span>
+          </>
+        )}
       </div>
       {articleEl}
     </div>
