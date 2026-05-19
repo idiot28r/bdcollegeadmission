@@ -136,6 +136,11 @@ const GROUP_SUBJECTS: Record<Group, string[]> = {
   humanities: ['Civics', 'History', 'Geography', 'Economics', 'Math', 'Bangla', 'English', 'GK'],
 };
 
+// Used for two purposes: display order on the student feed, and the
+// allowlist of institutions visible to students. Questions with any other
+// institution value (e.g. 'Unknown' — legacy data that admin still curates)
+// are hidden from the student-side filter dropdown and excluded from the
+// default feed. Admin sees the full set.
 const INSTITUTION_ORDER = ['NDC', 'HCC', 'SJHSS'];
 
 const GROUP_KEY = 'studyGroup';
@@ -1014,7 +1019,10 @@ function App() {
     const params = {
       p_group_subjects: isAdmin ? null : (studyGroup ? GROUP_SUBJECTS[studyGroup] : null),
       p_institution_order: INSTITUTION_ORDER,
-      p_inst_filter:    selInst.length > 0 ? selInst : null,
+      // Students default to the 3-institution allowlist (NDC/HCC/SJHSS) so
+       // 'Unknown' / ad-hoc labels never leak into the student feed. Admin
+       // gets the unfiltered view.
+      p_inst_filter:    selInst.length > 0 ? selInst : (isAdmin ? null : INSTITUTION_ORDER),
       p_subject_filter: selSub.length  > 0 ? selSub  : null,
       p_type_filter:    selType.length > 0 ? selType.map(t => t.toLowerCase()) : null,
       p_year_filter:    selYear.length > 0 ? selYear : null,
@@ -1111,6 +1119,11 @@ function App() {
     ? GROUP_SUBJECTS[studyGroup].filter(s => subjectOptions.includes(s))
     : subjectOptions;
 
+  // Institutions visible to students — intersect DB institutions with the
+  // INSTITUTION_ORDER allowlist (NDC / HCC / SJHSS only). 'Unknown' and any
+  // future ad-hoc labels stay in the DB but never appear in the student UI.
+  const studentCollegeOptions = collegeOptions.filter(c => INSTITUTION_ORDER.includes(c));
+
   // Render: admin login if requested but no session yet
   if (wantsAdmin && !adminSession) {
     return <AdminLogin onCancel={cancelAdminEntry} onSuccess={(s) => setAdminSession(s)} />;
@@ -1198,7 +1211,7 @@ function App() {
               </div>
             </header>
             <FilterBar
-              collegeOptions={collegeOptions}
+              collegeOptions={studentCollegeOptions}
               subjectOptions={studentSubjectOptions}
               typeOptions={typeOptions}
               yearOptions={yearOptions}

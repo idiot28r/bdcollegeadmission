@@ -1280,16 +1280,14 @@ input:checked + .slider:before {
 /* ========== Search highlight ========== */
 
 mark {
-  background: rgba(251, 191, 36, 0.32);
+  background: rgba(251, 191, 36, 0.42);
   color: inherit;
-  padding: 0.02em 0.22em;
-  border-radius: 3px;
+  padding: 0;
+  border-radius: 2px;
   font-weight: 600;
-  box-shadow: 0 0 0 1px rgba(251, 191, 36, 0.55);
 }
 [data-theme="light"] mark {
-  background: #fef3c7;
-  box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.55);
+  background: #fde68a;
 }
 
 /* ========== KaTeX ========== */
