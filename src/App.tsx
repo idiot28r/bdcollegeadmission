@@ -705,7 +705,6 @@ function App() {
   useEffect(() => {
     const feed = feedRef.current;
     if (!feed) return;
-    if (!student?.phone) return; // No identity → no read tracking.
 
     let startX = 0;
     let currentX = 0;
@@ -714,7 +713,7 @@ function App() {
 
     const onStart = (e: TouchEvent) => {
       const target = e.target as HTMLElement | null;
-      const card = target?.closest<HTMLElement>('.card[data-question-id]') ?? null;
+      const card = target?.closest<HTMLElement>('.card') ?? null;
       if (!card) return;
       swipeCard = card;
       startX = e.touches[0].clientX;
@@ -735,6 +734,8 @@ function App() {
       card.style.transform = 'translateX(0)';
       if (Math.abs(diffX) > 80) {
         const qid = card.getAttribute('data-question-id');
+        // Only persist if we have a student identity. The visual swipe still
+        // works for everyone — the toggle is the only thing gated on phone.
         if (qid) toggleReadRef.current(qid);
       }
       active = false;
@@ -751,7 +752,9 @@ function App() {
       feed.removeEventListener('touchend', onEnd);
       feed.removeEventListener('touchcancel', onEnd);
     };
-  }, [student?.phone]);
+    // Re-run when the student-feed root mounts (i.e. after the group picker
+    // dismisses and <main> appears). feedRef alone isn't a reactive dep.
+  }, [studyGroup, adminSession, isChoosingGroup]);
 
   // Wobble the first card once per session — the consume-effect is wired
   // up below, after `questions` is declared.
