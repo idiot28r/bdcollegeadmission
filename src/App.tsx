@@ -1,4 +1,4 @@
-import { Component, useState, useEffect, useCallback } from 'react'
+import { Component, useState, useEffect, useCallback, useRef } from 'react'
 import type { ErrorInfo, ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import * as Sentry from '@sentry/react'
@@ -79,6 +79,28 @@ interface Question {
   solution?: string;
   hidden?: boolean;
 }
+
+/* Bangla display names for subjects. The DB still stores the English values
+   ('Physics', 'Chemistry', etc.) — these are display-only. Any subject not
+   in the map falls back to its English name. */
+const SUBJECT_BN: Record<string, string> = {
+  Physics: 'পদার্থবিজ্ঞান',
+  Chemistry: 'রসায়ন',
+  Math: 'গণিত',
+  Biology: 'জীববিজ্ঞান',
+  English: 'ইংরেজি',
+  GK: 'সাধারণ জ্ঞান',
+  Bangla: 'বাংলা',
+  Accounting: 'হিসাববিজ্ঞান',
+  'Business Entrepreneurship': 'ব্যবসায় উদ্যোগ',
+  Finance: 'ফিন্যান্স',
+  Marketing: 'বিপণন',
+  Civics: 'পৌরনীতি',
+  History: 'ইতিহাস',
+  Geography: 'ভূগোল',
+  Economics: 'অর্থনীতি',
+};
+const displaySubject = (s: string) => SUBJECT_BN[s] ?? s;
 
 const SUBJECT_COLORS: Record<string, string> = {
   Physics: 'var(--color-physics)',
@@ -315,26 +337,27 @@ function EditableText({ text, onSave, className = "", isEditable = false, style 
 }
 
 /* ============ Multi-select bottom-sheet modal ============ */
-function MultiSelectModal({ title, options, selected, onToggle, onClose, onSelectAll, onClear }: { title: string; options: string[]; selected: string[]; onToggle: (v: string) => void; onClose: () => void; onSelectAll: () => void; onClear: () => void }) {
+function MultiSelectModal({ title, options, selected, onToggle, onClose, onSelectAll, onClear, getDisplay }: { title: string; options: string[]; selected: string[]; onToggle: (v: string) => void; onClose: () => void; onSelectAll: () => void; onClear: () => void; getDisplay?: (v: string) => string }) {
   // Portal to body so `position: fixed` is relative to the viewport, not to
   // .sticky-top (which has backdrop-filter and would otherwise become the
   // containing block, anchoring the sheet to the top of the screen).
+  const display = (v: string) => (getDisplay ? getDisplay(v) : v);
   return createPortal(
     <div className="modal-overlay" style={{ zIndex: 1200 }} onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <div className="modal-handle" />
         <div className="modal-header">
-          <h3>Filter by {title}</h3>
+          <h3>{title} বাছাই</h3>
           <div style={{ display: 'flex', gap: '0.4rem' }}>
-            <button className="filter-btn" style={{ padding: '0.35rem 0.7rem', fontSize: '0.76rem' }} onClick={onSelectAll}>All</button>
-            <button className="filter-btn" style={{ padding: '0.35rem 0.7rem', fontSize: '0.76rem' }} onClick={onClear}>Clear</button>
-            <button className="filter-btn active" style={{ padding: '0.35rem 0.85rem', fontSize: '0.76rem' }} onClick={onClose}>Done</button>
+            <button className="filter-btn" style={{ padding: '0.35rem 0.7rem', fontSize: '0.76rem' }} onClick={onSelectAll}>সব</button>
+            <button className="filter-btn" style={{ padding: '0.35rem 0.7rem', fontSize: '0.76rem' }} onClick={onClear}>মুছে দাও</button>
+            <button className="filter-btn active" style={{ padding: '0.35rem 0.85rem', fontSize: '0.76rem' }} onClick={onClose}>সম্পন্ন</button>
           </div>
         </div>
         <div className="option-grid">
           {options.length > 0 ? options.map((opt: string) => (
-            <div key={opt} className={`checkbox-item ${selected.includes(opt) ? 'selected' : ''}`} onClick={() => onToggle(opt)}>{opt}</div>
-          )) : <p style={{ gridColumn: '1/-1', textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>No options available with current filters</p>}
+            <div key={opt} className={`checkbox-item ${selected.includes(opt) ? 'selected' : ''}`} onClick={() => onToggle(opt)}>{display(opt)}</div>
+          )) : <p style={{ gridColumn: '1/-1', textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>কোন অপশন নেই</p>}
         </div>
       </div>
     </div>,
@@ -415,7 +438,7 @@ function GroupSelector({ onSelect, onCancel }: { onSelect: (g: Group) => void; o
             <button key={g} className="group-card" onClick={() => onSelect(g)}>
               <span>
                 {GROUP_LABELS[g]}
-                <span className="group-card-sub">{GROUP_SUBJECTS[g].slice(0, 4).join(' · ')}{GROUP_SUBJECTS[g].length > 4 ? ' …' : ''}</span>
+                <span className="group-card-sub">{GROUP_SUBJECTS[g].slice(0, 4).map(displaySubject).join(' · ')}{GROUP_SUBJECTS[g].length > 4 ? ' …' : ''}</span>
               </span>
               <span className="group-card-arrow"><I.Chevron size={16} /></span>
             </button>
@@ -751,6 +774,8 @@ function App() {
     const questionsSubscription = supabase
       .channel('public:questions_count')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'questions' }, async () => {
+        // Any change on questions invalidates every cached feed view.
+        feedCacheRef.current.clear();
         const { count, error: countError } = await supabase.from('questions').select('*', { count: 'exact', head: true });
         if (!countError) setTotalCount(count || 0);
       })
@@ -762,9 +787,41 @@ function App() {
     };
   }, []);
 
+  // In-memory cache: per filter signature, store everything we've fetched
+  // (accumulated rows + total count + next page index). When the user toggles
+  // back to a previously-seen filter combo, we restore instantly without a
+  // server round-trip. Invalidated by the realtime questions subscription.
+  const feedCacheRef = useRef(new Map<string, { rows: Question[]; count: number; nextPage: number; ts: number }>());
+
+  const cacheKey = useCallback(() => JSON.stringify({
+    g: studyGroup ?? '',
+    a: isAdmin,
+    i: [...selInst].sort(),
+    s: [...selSub].sort(),
+    t: [...selType].sort(),
+    y: [...selYear].sort(),
+    q: debouncedQuery.trim().toLowerCase(),
+  }), [studyGroup, isAdmin, selInst, selSub, selType, selYear, debouncedQuery]);
+
   const loadQuestions = useCallback(async (isNewSearch = false) => {
     // Student view requires a group choice before fetching.
     if (!isAdmin && !studyGroup) return;
+
+    const key = cacheKey();
+
+    // Cache hit on a fresh search → restore everything we had and skip the
+    // round-trip. The next infinite-scroll tick resumes from where we left.
+    if (isNewSearch) {
+      const cached = feedCacheRef.current.get(key);
+      if (cached) {
+        setQuestions(cached.rows);
+        setFilteredCount(cached.count);
+        setHasMore(cached.rows.length < cached.count);
+        setPage(cached.nextPage);
+        setLoading(false);
+        return;
+      }
+    }
 
     const currentPage = isNewSearch ? 0 : page;
     const pageSize = 20;
@@ -795,7 +852,18 @@ function App() {
       const rows = payload.rows ?? [];
       const count = payload.count ?? 0;
       console.debug('[fetch_questions_feed] count:', count, 'rows:', rows.length, 'params:', params);
-      setQuestions(prev => isNewSearch ? rows : [...prev, ...rows]);
+
+      if (isNewSearch) {
+        setQuestions(rows);
+        feedCacheRef.current.set(key, { rows, count, nextPage: 1, ts: Date.now() });
+      } else {
+        setQuestions(prev => {
+          const merged = [...prev, ...rows];
+          feedCacheRef.current.set(key, { rows: merged, count, nextPage: currentPage + 1, ts: Date.now() });
+          return merged;
+        });
+      }
+
       setHasMore(offset + rows.length < count);
       if (isNewSearch) setFilteredCount(count);
       if (!isNewSearch) setPage(currentPage + 1);
@@ -803,7 +871,7 @@ function App() {
     }
     setLoading(false);
     setIsFetchingMore(false);
-  }, [page, selInst, selSub, selType, selYear, isAdmin, studyGroup, debouncedQuery]);
+  }, [page, selInst, selSub, selType, selYear, isAdmin, studyGroup, debouncedQuery, cacheKey]);
 
   // Infinite scroll
   useEffect(() => {
@@ -986,22 +1054,25 @@ function FilterBar({ collegeOptions, subjectOptions, typeOptions, yearOptions, s
     setter((prev: string[]) => prev.includes(val) ? prev.filter(i => i !== val) : [...prev, val]);
   };
 
-  const label = (l: string, s: string[]) => s.length === 0 ? l : (s.length === 1 ? s[0] : `${s[0]} +${s.length - 1}`);
+  const label = (l: string, s: string[], format?: (v: string) => string) => {
+    const fmt = format ?? ((v: string) => v);
+    return s.length === 0 ? l : (s.length === 1 ? fmt(s[0]) : `${fmt(s[0])} +${s.length - 1}`);
+  };
 
   const hasAnyFilter = selInst.length > 0 || selSub.length > 0 || selType.length > 0 || selYear.length > 0;
 
   return (
     <div className="filter-row" style={{ gridTemplateColumns: hasAnyFilter ? 'repeat(4, 1fr) 40px' : 'repeat(4, 1fr)' }}>
-      <button className={`filter-btn ${selInst.length ? 'active' : ''}`} onClick={() => setModal('Inst')}><span>{label('Inst', selInst)}</span><I.Chevron /></button>
-      <button className={`filter-btn ${selSub.length ? 'active' : ''}`} onClick={() => setModal('Subj')}><span>{label('Subj', selSub)}</span><I.Chevron /></button>
-      <button className={`filter-btn ${selType.length ? 'active' : ''}`} onClick={() => setModal('Type')}><span>{label('Type', selType)}</span><I.Chevron /></button>
-      <button className={`filter-btn ${selYear.length ? 'active' : ''}`} onClick={() => setModal('Year')}><span>{label('Year', selYear)}</span><I.Chevron /></button>
-      {hasAnyFilter && <button className="filter-btn filter-clear" onClick={onClear} title="Clear all filters" aria-label="Clear all filters"><I.Close /></button>}
+      <button className={`filter-btn ${selInst.length ? 'active' : ''}`} onClick={() => setModal('Inst')}><span>{label('কলেজ', selInst)}</span><I.Chevron /></button>
+      <button className={`filter-btn ${selSub.length ? 'active' : ''}`} onClick={() => setModal('Subj')}><span>{label('বিষয়', selSub, displaySubject)}</span><I.Chevron /></button>
+      <button className={`filter-btn ${selType.length ? 'active' : ''}`} onClick={() => setModal('Type')}><span>{label('ধরণ', selType)}</span><I.Chevron /></button>
+      <button className={`filter-btn ${selYear.length ? 'active' : ''}`} onClick={() => setModal('Year')}><span>{label('বছর', selYear)}</span><I.Chevron /></button>
+      {hasAnyFilter && <button className="filter-btn filter-clear" onClick={onClear} title="সব ফিল্টার মুছে দাও" aria-label="Clear all filters"><I.Close /></button>}
 
-      {modal === 'Inst' && <MultiSelectModal title="College" options={collegeOptions} selected={selInst} onToggle={(v: string) => toggle(setSelInst, v)} onSelectAll={() => setSelInst(collegeOptions)} onClear={() => setSelInst([])} onClose={() => setModal(null)} />}
-      {modal === 'Subj' && <MultiSelectModal title="Subject" options={subjectOptions} selected={selSub} onToggle={(v: string) => toggle(setSelSub, v)} onSelectAll={() => setSelSub(subjectOptions)} onClear={() => setSelSub([])} onClose={() => setModal(null)} />}
-      {modal === 'Type' && <MultiSelectModal title="Type" options={typeOptions} selected={selType} onToggle={(v: string) => toggle(setSelType, v)} onSelectAll={() => setSelType(typeOptions)} onClear={() => setSelType([])} onClose={() => setModal(null)} />}
-      {modal === 'Year' && <MultiSelectModal title="Year" options={yearOptions} selected={selYear} onToggle={(v: string) => toggle(setSelYear, v)} onSelectAll={() => setSelYear(yearOptions)} onClear={() => setSelYear([])} onClose={() => setModal(null)} />}
+      {modal === 'Inst' && <MultiSelectModal title="কলেজ" options={collegeOptions} selected={selInst} onToggle={(v: string) => toggle(setSelInst, v)} onSelectAll={() => setSelInst(collegeOptions)} onClear={() => setSelInst([])} onClose={() => setModal(null)} />}
+      {modal === 'Subj' && <MultiSelectModal title="বিষয়" options={subjectOptions} selected={selSub} onToggle={(v: string) => toggle(setSelSub, v)} onSelectAll={() => setSelSub(subjectOptions)} onClear={() => setSelSub([])} onClose={() => setModal(null)} getDisplay={displaySubject} />}
+      {modal === 'Type' && <MultiSelectModal title="ধরণ" options={typeOptions} selected={selType} onToggle={(v: string) => toggle(setSelType, v)} onSelectAll={() => setSelType(typeOptions)} onClear={() => setSelType([])} onClose={() => setModal(null)} />}
+      {modal === 'Year' && <MultiSelectModal title="বছর" options={yearOptions} selected={selYear} onToggle={(v: string) => toggle(setSelYear, v)} onSelectAll={() => setSelYear(yearOptions)} onClear={() => setSelYear([])} onClose={() => setModal(null)} />}
     </div>
   );
 }
@@ -1042,7 +1113,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings }: { 
   return (
     <article className={`card ${question.hidden ? 'read' : ''}`}>
       <div className="card-meta">
-        <span className="badge badge-subject" style={{ background: subjectColor }}>{question.subject}</span>
+        <span className="badge badge-subject" style={{ background: subjectColor }}>{displaySubject(question.subject)}</span>
         <span className="badge-meta">{question.institution} · {question.year}</span>
         <div className="card-meta-end">
           {question.serial && <span className="badge-serial">#{question.serial}</span>}
