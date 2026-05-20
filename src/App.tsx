@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import * as Sentry from '@sentry/react'
 import katex from 'katex'
 import { supabase } from './supabaseClient'
-import { feedback, setFeedbackConfig } from './feedback'
+import { feedback, setAdminFeedback, setUserFeedback } from './feedback'
 import './App.css'
 import './Admin.css'
 
@@ -169,6 +169,14 @@ interface Settings {
 const DEFAULT_SETTINGS: Settings = { autoExp: false, showOpt: true, showAns: false, showExp: false };
 
 type Theme = 'dark' | 'light' | 'system';
+
+function readBoolPref(key: string, def: boolean): boolean {
+  if (typeof window === 'undefined') return def;
+  try { const v = localStorage.getItem(key); return v === null ? def : v === '1'; } catch { return def; }
+}
+function writeBoolPref(key: string, val: boolean) {
+  try { localStorage.setItem(key, val ? '1' : '0'); } catch { /* ignore */ }
+}
 
 function applyTheme(t: Theme) {
   const root = document.documentElement;
@@ -409,7 +417,7 @@ function MultiSelectModal({ title, options, selected, onToggle, onClose, onSelec
 }
 
 /* ============ Sidebar ============ */
-function Sidebar({ isOpen, onClose, settings, onSettingChange, theme, onThemeChange, group, onChangeGroup }: { isOpen: boolean; onClose: () => void; settings: Settings; onSettingChange: (key: keyof Settings, val: boolean) => void; theme: Theme; onThemeChange: (t: Theme) => void; group: Group | null; onChangeGroup: () => void }) {
+function Sidebar({ isOpen, onClose, settings, onSettingChange, theme, onThemeChange, group, onChangeGroup, userHaptics, userSound, onFeedbackChange }: { isOpen: boolean; onClose: () => void; settings: Settings; onSettingChange: (key: keyof Settings, val: boolean) => void; theme: Theme; onThemeChange: (t: Theme) => void; group: Group | null; onChangeGroup: () => void; userHaptics: boolean; userSound: boolean; onFeedbackChange: (key: 'haptics' | 'sound', val: boolean) => void }) {
   return (
     <>
       <div className={`modal-overlay ${isOpen ? 'open' : ''}`} style={{ display: isOpen ? 'block' : 'none', zIndex: 1050 }} onClick={onClose} />
@@ -446,6 +454,18 @@ function Sidebar({ isOpen, onClose, settings, onSettingChange, theme, onThemeCha
               <div className="toggle-sub">Reveal after you pick an option</div>
             </div>
             <label className="switch"><input type="checkbox" checked={settings.autoExp} onChange={e => onSettingChange('autoExp', e.target.checked)} /><span className="slider"></span></label>
+          </div>
+        </div>
+
+        <div className="sidebar-section">
+          <div className="sidebar-label">Feedback</div>
+          <div className="toggle-row">
+            <span className="toggle-label">Haptics (vibration)</span>
+            <label className="switch"><input type="checkbox" checked={userHaptics} onChange={e => onFeedbackChange('haptics', e.target.checked)} /><span className="slider"></span></label>
+          </div>
+          <div className="toggle-row">
+            <span className="toggle-label">Sound</span>
+            <label className="switch"><input type="checkbox" checked={userSound} onChange={e => onFeedbackChange('sound', e.target.checked)} /><span className="slider"></span></label>
           </div>
         </div>
 
@@ -672,6 +692,15 @@ function App() {
     if (typeof window === 'undefined') return 'dark';
     return (localStorage.getItem('theme') as Theme) || 'dark';
   });
+
+  // Per-student feedback preferences (within what the admin globally allows).
+  const [userHaptics, setUserHaptics] = useState<boolean>(() => readBoolPref('fbHaptics', true));
+  const [userSound, setUserSound] = useState<boolean>(() => readBoolPref('fbSound', true));
+  useEffect(() => { setUserFeedback({ haptics: userHaptics, sound: userSound }); }, [userHaptics, userSound]);
+  const handleFeedbackChange = (key: 'haptics' | 'sound', val: boolean) => {
+    if (key === 'haptics') { setUserHaptics(val); writeBoolPref('fbHaptics', val); }
+    else { setUserSound(val); writeBoolPref('fbSound', val); }
+  };
 
   // Admin gating (custom — no Supabase Auth)
   const [wantsAdmin, setWantsAdmin] = useState(() => {
@@ -991,7 +1020,7 @@ function App() {
         if (data.font_en) document.documentElement.style.setProperty('--font-en', data.font_en);
         if (typeof data.banner_enabled === 'boolean') setBannerEnabled(data.banner_enabled);
         if (typeof data.banner_message === 'string') setBannerMessage(data.banner_message);
-        setFeedbackConfig({
+        setAdminFeedback({
           haptics: typeof data.haptics_enabled === 'boolean' ? data.haptics_enabled : undefined,
           sound: typeof data.sound_enabled === 'boolean' ? data.sound_enabled : undefined,
         });
@@ -1038,7 +1067,7 @@ function App() {
         if (typeof row.font_en === 'string') document.documentElement.style.setProperty('--font-en', row.font_en);
         if (typeof row.banner_enabled === 'boolean') setBannerEnabled(row.banner_enabled);
         if (typeof row.banner_message === 'string') setBannerMessage(row.banner_message);
-        setFeedbackConfig({
+        setAdminFeedback({
           haptics: typeof row.haptics_enabled === 'boolean' ? row.haptics_enabled : undefined,
           sound: typeof row.sound_enabled === 'boolean' ? row.sound_enabled : undefined,
         });
@@ -1359,7 +1388,7 @@ function App() {
               </div>
             )}
           </main>
-          <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} settings={settings} onSettingChange={handleSettingChange} theme={theme} onThemeChange={handleThemeChange} group={studyGroup} onChangeGroup={() => { setIsSidebarOpen(false); setIsChoosingGroup(true); }} />
+          <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} settings={settings} onSettingChange={handleSettingChange} theme={theme} onThemeChange={handleThemeChange} group={studyGroup} onChangeGroup={() => { setIsSidebarOpen(false); setIsChoosingGroup(true); }} userHaptics={userHaptics} userSound={userSound} onFeedbackChange={handleFeedbackChange} />
         </>
       )}
     </div>
@@ -1558,11 +1587,11 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
       {!isAdmin && (
         question.type === 'mcq' ? (
           <div className="card-footer">
-            <button className={`toggle-btn ${optRevealed ? 'active' : ''}`} onClick={() => { feedback('tap'); setOptRevealed(!optRevealed); }}>
+            <button className={`toggle-btn ${optRevealed ? 'active' : ''}`} onClick={() => { feedback('press'); setOptRevealed(!optRevealed); }}>
               <I.List /> Options
             </button>
             <button className={`toggle-btn ${ansRevealed ? 'active' : ''}`} onClick={() => {
-              feedback('tap');
+              feedback('press');
               const newVal = !ansRevealed;
               setAnsRevealed(newVal);
               if (!newVal) setSol(false);
@@ -1570,7 +1599,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
               <I.Target /> Answer
             </button>
             <button className={`toggle-btn ${sol ? 'active' : ''}`} onClick={() => {
-              feedback('tap');
+              feedback('press');
               const newVal = !sol;
               setSol(newVal);
               if (newVal) setAnsRevealed(true);
@@ -1579,7 +1608,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
             </button>
           </div>
         ) : (
-          <div className={`sq-footer ${sol ? 'active' : ''}`} onClick={() => { feedback('tap'); setSol(!sol); }}>
+          <div className={`sq-footer ${sol ? 'active' : ''}`} onClick={() => { feedback('press'); setSol(!sol); }}>
             <I.Bulb /> {sol ? 'Hide Solution' : 'View Solution'}
           </div>
         )
