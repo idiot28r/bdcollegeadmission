@@ -1389,7 +1389,20 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
     }
   };
 
-  const showLabel = !!question.stimulus || (question.parts && question.parts.length > 1);
+  // Some SQ rows were imported with the question duplicated into BOTH the
+  // stimulus and the single part — which renders the same text twice. When
+  // the stimulus exactly equals the lone part's question, treat the stimulus
+  // as redundant: hide the header and the (now pointless) part label.
+  const sqParts = question.parts || [];
+  const stimulusIsDupOfPart =
+    question.type === 'sq' &&
+    sqParts.length === 1 &&
+    !!question.stimulus &&
+    question.stimulus.trim() === (sqParts[0]?.question || '').trim();
+
+  const headerText = question.type === 'mcq' ? (question.question || "") : (question.stimulus || "");
+  const showHeader = !!headerText.trim() && !stimulusIsDupOfPart;
+  const showLabel = !stimulusIsDupOfPart && (!!question.stimulus || sqParts.length > 1);
   const subjectColor = SUBJECT_COLORS[question.subject] || 'var(--text-faint)';
   const shouldDim = question.hidden || isRead;
 
@@ -1405,7 +1418,9 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
           {question.serial && <span className="badge-serial">#{question.serial}</span>}
         </div>
       </div>
-      <EditableText className="card-header-main" text={question.type === 'mcq' ? (question.question || "") : (question.stimulus || "")} isEditable={isAdmin} highlight={searchQuery} onSave={(v: string) => onUpdateField?.(question.type === 'mcq' ? 'question' : 'stimulus', v)} />
+      {showHeader && (
+        <EditableText className="card-header-main" text={headerText} isEditable={isAdmin} highlight={searchQuery} onSave={(v: string) => onUpdateField?.(question.type === 'mcq' ? 'question' : 'stimulus', v)} />
+      )}
       {question.type === 'mcq' ? (
         <>
           {(optRevealed || isAdmin) && (
