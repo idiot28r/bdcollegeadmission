@@ -75,6 +75,7 @@
   --color-history: #d97706;
   --color-geography: #4ade80;
   --color-economics: #38bdf8;
+  --color-ict: #a3e635;
 
   --font-en: 'Times New Roman', serif;
   --font-bn: 'Noto Serif Bengali', serif;
@@ -127,6 +128,7 @@
   --color-history: #b45309;
   --color-geography: #15803d;
   --color-economics: #0284c7;
+  --color-ict: #4d7c0f;
 
   color-scheme: light;
 }

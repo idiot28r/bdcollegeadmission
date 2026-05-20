@@ -91,10 +91,10 @@ const SUBJECT_BN: Record<string, string> = {
   English: 'ইংরেজি',
   GK: 'সাধারণ জ্ঞান',
   Bangla: 'বাংলা',
+  ICT: 'আইসিটি',
   Accounting: 'হিসাববিজ্ঞান',
   'Business Entrepreneurship': 'ব্যবসায় উদ্যোগ',
-  Finance: 'ফিন্যান্স',
-  Marketing: 'বিপণন',
+  'Finance and Banking': 'ফিন্যান্স ও ব্যাংকিং',
   Civics: 'পৌরনীতি',
   History: 'ইতিহাস',
   Geography: 'ভূগোল',
@@ -110,10 +110,10 @@ const SUBJECT_COLORS: Record<string, string> = {
   English: 'var(--color-english)',
   GK: 'var(--color-gk)',
   Bangla: 'var(--color-bangla)',
+  ICT: 'var(--color-ict)',
   Accounting: 'var(--color-accounting)',
   'Business Entrepreneurship': 'var(--color-business)',
-  Finance: 'var(--color-finance)',
-  Marketing: 'var(--color-marketing)',
+  'Finance and Banking': 'var(--color-finance)',
   Civics: 'var(--color-civics)',
   History: 'var(--color-history)',
   Geography: 'var(--color-geography)',
@@ -131,9 +131,11 @@ const GROUP_LABELS: Record<Group, string> = {
 
 const GROUP_SUBJECTS: Record<Group, string[]> = {
   // The order in each array IS the display + sort order on the feed.
-  science:    ['Physics', 'Chemistry', 'Biology', 'Math', 'Bangla', 'English', 'GK'],
-  bst:        ['Accounting', 'Business Entrepreneurship', 'Finance', 'Marketing', 'Math', 'Bangla', 'GK'],
-  humanities: ['Civics', 'History', 'Geography', 'Economics', 'Math', 'Bangla', 'English', 'GK'],
+  // Subject names must match the DB exactly (intersected against the live
+  // subject list, so a name with no rows simply won't appear in the modal).
+  science:    ['Physics', 'Chemistry', 'Biology', 'Math', 'ICT', 'Bangla', 'English', 'GK'],
+  bst:        ['Accounting', 'Business Entrepreneurship', 'Finance and Banking', 'Economics', 'Math', 'ICT', 'Bangla', 'English', 'GK'],
+  humanities: ['Civics', 'History', 'Geography', 'Economics', 'Math', 'ICT', 'Bangla', 'English', 'GK'],
 };
 
 // Used for two purposes: display order on the student feed, and the
@@ -150,6 +152,22 @@ function readGroup(): Group | null {
   const raw = localStorage.getItem(GROUP_KEY);
   if (raw === 'science' || raw === 'bst' || raw === 'humanities') return raw;
   return null;
+}
+
+/* ============ Saved filters (persist last selection across reloads) ============ */
+const FILTERS_KEY = 'lastFilters';
+type SavedFilters = { inst: string[]; sub: string[]; type: string[]; year: string[] };
+
+function readSavedFilters(): SavedFilters {
+  const empty: SavedFilters = { inst: [], sub: [], type: [], year: [] };
+  if (typeof window === 'undefined') return empty;
+  try {
+    const raw = localStorage.getItem(FILTERS_KEY);
+    if (!raw) return empty;
+    const f = JSON.parse(raw);
+    const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
+    return { inst: arr(f.inst), sub: arr(f.sub), type: arr(f.type), year: arr(f.year) };
+  } catch { return empty; }
 }
 
 interface Settings {
@@ -190,7 +208,12 @@ function sortQuestions(qs: Question[]): Question[] {
 
 function cleanText(t: string) {
   if (!t) return "";
-  return t.replace(/^[\d০-৯]+[\s.।\)]+\s*/, "").trim();
+  // Strip a leading serial marker only when it's a number followed by a
+  // separator (. ) ।) AND then whitespace — e.g. "1. ", "24) ", "১০। ".
+  // Requiring the trailing space avoids eating legitimate content like
+  // "5 grams" (number + space, no separator) or "1.5 kg" (decimal — the
+  // char after "." is a digit, not a space).
+  return t.replace(/^\s*[\d০-৯]+[.।)]+\s+/, "").trim();
 }
 
 function renderMath(text: string) {
@@ -860,10 +883,20 @@ function App() {
   const [typeOptions] = useState<string[]>(['MCQ', 'SQ']);
   const [yearOptions, setYearOptions] = useState<string[]>([]);
 
-  const [selInst, setSelInst] = useState<string[]>([]);
-  const [selSub, setSelSub] = useState<string[]>([]);
-  const [selType, setSelType] = useState<string[]>([]);
-  const [selYear, setSelYear] = useState<string[]>([]);
+  // Filters initialize from the student's last saved selection so a reload /
+  // app restart keeps their filters. (Restoring in the initializer — not a
+  // post-mount effect — avoids the save-effect overwriting it with empties.)
+  const [selInst, setSelInst] = useState<string[]>(() => readSavedFilters().inst);
+  const [selSub, setSelSub] = useState<string[]>(() => readSavedFilters().sub);
+  const [selType, setSelType] = useState<string[]>(() => readSavedFilters().type);
+  const [selYear, setSelYear] = useState<string[]>(() => readSavedFilters().year);
+
+  // Persist filters whenever they change.
+  useEffect(() => {
+    try {
+      localStorage.setItem(FILTERS_KEY, JSON.stringify({ inst: selInst, sub: selSub, type: selType, year: selYear }));
+    } catch { /* ignore */ }
+  }, [selInst, selSub, selType, selYear]);
 
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
@@ -1160,6 +1193,9 @@ function App() {
           isLoadingMore={isFetchingMore}
           totalCount={totalCount}
           filteredCount={filteredCount}
+          searchValue={searchQuery}
+          onSearchChange={setSearchQuery}
+          highlightQuery={debouncedQuery}
         />
       ) : (
         <>
@@ -1464,7 +1500,10 @@ function AdminDashboard({
   hasMore,
   isLoadingMore,
   totalCount,
-  filteredCount
+  filteredCount,
+  searchValue,
+  onSearchChange,
+  highlightQuery
 }: {
   questions: Question[];
   onUpdate: (qs: Question[]) => void;
@@ -1483,6 +1522,9 @@ function AdminDashboard({
   isLoadingMore: boolean;
   totalCount: number;
   filteredCount: number;
+  searchValue: string;
+  onSearchChange: (v: string) => void;
+  highlightQuery: string;
 }) {
   // Wrap callAdmin so that an invalid-credentials response auto-signs-out.
   const adminCall = useCallback(async <T = unknown>(op: string, payload: unknown): Promise<AdminResult<T>> => {
@@ -1620,6 +1662,20 @@ function AdminDashboard({
             selYear={selYear} setSelYear={setSelYear}
             onClear={onClear}
           />
+          <div className="search-bar" style={{ margin: '0.6rem 0 0' }}>
+            <I.Search size={16} />
+            <input
+              type="text"
+              placeholder="Search questions, topics…"
+              value={searchValue}
+              onChange={e => onSearchChange(e.target.value)}
+            />
+            {searchValue && (
+              <button className="search-clear" onClick={() => onSearchChange('')} aria-label="Clear search">
+                <I.Close size={14} />
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="admin-cards-view">
@@ -1646,6 +1702,7 @@ function AdminDashboard({
                 question={q}
                 isAdmin={true}
                 settings={DEFAULT_SETTINGS}
+                searchQuery={highlightQuery}
                 onUpdateField={async (f, v) => {
                   const updatedQuestion = { ...q, [f]: v };
                   const r = await adminCall('update_question', { id: q.id, fields: { [f]: v } });
