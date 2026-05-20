@@ -14,12 +14,17 @@
 -- =============================================================================
 
 CREATE TABLE IF NOT EXISTS public.student_progress (
-  student_phone     text PRIMARY KEY,
-  read_question_ids text[] NOT NULL DEFAULT '{}',
-  filters           jsonb  NOT NULL DEFAULT '{}'::jsonb,
-  study_group       text,
-  updated_at        timestamptz NOT NULL DEFAULT now()
+  student_phone        text PRIMARY KEY,
+  read_question_ids    text[] NOT NULL DEFAULT '{}',
+  flagged_question_ids text[] NOT NULL DEFAULT '{}',
+  filters              jsonb  NOT NULL DEFAULT '{}'::jsonb,
+  study_group          text,
+  updated_at           timestamptz NOT NULL DEFAULT now()
 );
+
+-- flagged_question_ids: questions this student reported as wrong/mistaken.
+ALTER TABLE public.student_progress
+  ADD COLUMN IF NOT EXISTS flagged_question_ids text[] NOT NULL DEFAULT '{}';
 
 -- filters: last-used filter selection, e.g.
 --   { "inst": ["NDC"], "sub": ["Physics"], "type": ["mcq"], "year": ["2024"] }
@@ -85,3 +90,42 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.mark_question_read(text, text)   TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.unmark_question_read(text, text) TO anon, authenticated;
+
+-- Flag a question as wrong/mistaken (idempotent).
+CREATE OR REPLACE FUNCTION public.flag_question(
+  p_phone       text,
+  p_question_id text
+) RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  INSERT INTO public.student_progress (student_phone, flagged_question_ids, updated_at)
+  VALUES (p_phone, ARRAY[p_question_id], now())
+  ON CONFLICT (student_phone) DO UPDATE
+  SET
+    flagged_question_ids = CASE
+      WHEN p_question_id = ANY(public.student_progress.flagged_question_ids)
+        THEN public.student_progress.flagged_question_ids
+      ELSE array_append(public.student_progress.flagged_question_ids, p_question_id)
+    END,
+    updated_at = now();
+END;
+$$;
+
+-- Remove a flag.
+CREATE OR REPLACE FUNCTION public.unflag_question(
+  p_phone       text,
+  p_question_id text
+) RETURNS void
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  UPDATE public.student_progress
+  SET flagged_question_ids = array_remove(flagged_question_ids, p_question_id),
+      updated_at = now()
+  WHERE student_phone = p_phone;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.flag_question(text, text)   TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.unflag_question(text, text) TO anon, authenticated;

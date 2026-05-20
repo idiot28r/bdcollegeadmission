@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
       }
       case 'update_settings': {
         const p = (payload ?? {}) as Record<string, unknown>;
-        const allowed = ['font_bn', 'font_en', 'banner_enabled', 'banner_message'];
+        const allowed = ['font_bn', 'font_en', 'banner_enabled', 'banner_message', 'haptics_enabled', 'sound_enabled'];
         const update: Record<string, unknown> = { id: 1 };
         for (const k of allowed) {
           if (k in p) update[k] = p[k];

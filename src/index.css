@@ -556,6 +556,38 @@ header h2 {
   letter-spacing: 0.08em;
 }
 
+/* Explanation/Solution title + report-flag button on one row */
+.section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.55rem;
+}
+.section-title-row .section-title {
+  margin-bottom: 0;
+}
+.flag-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-faint);
+  cursor: pointer;
+  padding: 3px 7px;
+  margin: -3px -7px -3px 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border-radius: 6px;
+  transition: 0.15s;
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.flag-btn:hover { color: var(--wrong); background: var(--wrong-bg); }
+.flag-btn.flagged { color: var(--wrong); }
+
 /* Options */
 .option {
   padding: 0.78rem 0.95rem;

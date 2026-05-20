@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import * as Sentry from '@sentry/react'
 import katex from 'katex'
 import { supabase } from './supabaseClient'
+import { feedback, setFeedbackConfig } from './feedback'
 import './App.css'
 import './Admin.css'
 
@@ -321,6 +322,12 @@ const I = {
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M3 7v6h6" />
       <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
+    </svg>
+  ),
+  Flag: ({ size = 15, filled = false }: { size?: number; filled?: boolean } = {}) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+      <line x1="4" x2="4" y1="22" y2="15" />
     </svg>
   ),
 };
@@ -691,6 +698,8 @@ function App() {
   // writes can't clobber the array. Empty/unidentified students don't get
   // read tracking — swipe gesture is disabled for them.
   const [readSet, setReadSet] = useState<Set<string>>(new Set());
+  // Questions this student has flagged as wrong/mistaken (student_progress).
+  const [flaggedSet, setFlaggedSet] = useState<Set<string>>(new Set());
 
   // Filter selections (restored from / saved to student_progress.filters).
   const [selInst, setSelInst] = useState<string[]>([]);
@@ -707,13 +716,14 @@ function App() {
     // Admin view doesn't use read tracking or saved student filters.
     if (admin || !phone) {
       setReadSet(new Set());
+      setFlaggedSet(new Set());
       setFiltersRestored(true);
       return;
     }
     let cancelled = false;
     supabase
       .from('student_progress')
-      .select('read_question_ids, filters, study_group')
+      .select('read_question_ids, flagged_question_ids, filters, study_group')
       .eq('student_phone', phone)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -721,6 +731,8 @@ function App() {
         if (!error && data) {
           const ids = (data as { read_question_ids?: string[] }).read_question_ids ?? [];
           setReadSet(new Set(ids));
+          const flags = (data as { flagged_question_ids?: string[] }).flagged_question_ids ?? [];
+          setFlaggedSet(new Set(flags));
           const f = parseFilters((data as { filters?: unknown }).filters);
           setSelInst(f.inst);
           setSelSub(f.sub);
@@ -766,6 +778,24 @@ function App() {
     });
     if (error) console.error(`[toggleRead] ${rpcName} failed`, error);
   }, [student?.phone, readSet]);
+
+  const toggleFlag = useCallback(async (questionId: string) => {
+    const phone = student?.phone;
+    if (!phone) return;
+    const wasFlagged = flaggedSet.has(questionId);
+    feedback(wasFlagged ? 'tap' : 'toggle');
+    setFlaggedSet(prev => {
+      const next = new Set(prev);
+      if (wasFlagged) next.delete(questionId); else next.add(questionId);
+      return next;
+    });
+    const rpcName = wasFlagged ? 'unflag_question' : 'flag_question';
+    const { error } = await supabase.rpc(rpcName, {
+      p_phone: phone,
+      p_question_id: questionId,
+    });
+    if (error) console.error(`[toggleFlag] ${rpcName} failed`, error);
+  }, [student?.phone, flaggedSet]);
 
   // Native swipe-to-toggle-read on the student feed. We attach raw touch
   // listeners (not React synthetic events) because some Android WebViews and
@@ -837,6 +867,7 @@ function App() {
         // Toggle the class on the DOM synchronously (like the reference does)
         // so opacity/filter animate in the same frame as the snap-back.
         card.classList.toggle('read');
+        feedback('toggle');
         const qid = card.getAttribute('data-question-id');
         if (qid) toggleReadRef.current(qid);
       }
@@ -960,6 +991,10 @@ function App() {
         if (data.font_en) document.documentElement.style.setProperty('--font-en', data.font_en);
         if (typeof data.banner_enabled === 'boolean') setBannerEnabled(data.banner_enabled);
         if (typeof data.banner_message === 'string') setBannerMessage(data.banner_message);
+        setFeedbackConfig({
+          haptics: typeof data.haptics_enabled === 'boolean' ? data.haptics_enabled : undefined,
+          sound: typeof data.sound_enabled === 'boolean' ? data.sound_enabled : undefined,
+        });
       }
     };
 
@@ -1003,6 +1038,10 @@ function App() {
         if (typeof row.font_en === 'string') document.documentElement.style.setProperty('--font-en', row.font_en);
         if (typeof row.banner_enabled === 'boolean') setBannerEnabled(row.banner_enabled);
         if (typeof row.banner_message === 'string') setBannerMessage(row.banner_message);
+        setFeedbackConfig({
+          haptics: typeof row.haptics_enabled === 'boolean' ? row.haptics_enabled : undefined,
+          sound: typeof row.sound_enabled === 'boolean' ? row.sound_enabled : undefined,
+        });
       })
       .subscribe();
 
@@ -1302,6 +1341,8 @@ function App() {
                     isRead={readSet.has(q.id)}
                     wobble={wobbleEnabled && idx === 0}
                     searchQuery={debouncedQuery}
+                    isFlagged={flaggedSet.has(q.id)}
+                    onToggleFlag={student?.phone ? () => toggleFlag(q.id) : undefined}
                   />
                 ))}
                 <div id="scroll-sentinel" style={{ height: '20px', margin: '10px 0' }} />
@@ -1357,7 +1398,7 @@ function FilterBar({ collegeOptions, subjectOptions, typeOptions, yearOptions, s
 }
 
 /* ============ Question Card ============ */
-function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRead = false, wobble = false, searchQuery = '' }: { question: Question; isAdmin?: boolean; onUpdateField?: (f: keyof Question, v: any) => void; settings?: Settings; isRead?: boolean; wobble?: boolean; searchQuery?: string }) {
+function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRead = false, wobble = false, searchQuery = '', isFlagged = false, onToggleFlag }: { question: Question; isAdmin?: boolean; onUpdateField?: (f: keyof Question, v: any) => void; settings?: Settings; isRead?: boolean; wobble?: boolean; searchQuery?: string; isFlagged?: boolean; onToggleFlag?: () => void }) {
   const [sel, setSel] = useState<number | null>(null);
   const [sol, setSol] = useState(false);
   const [optRevealed, setOptRevealed] = useState(true);
@@ -1386,6 +1427,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
       setSel(idx);
       setAnsRevealed(true);
       if (settings?.autoExp) setSol(true);
+      feedback(idx === question.answer_index ? 'success' : 'error');
     }
   };
 
@@ -1405,6 +1447,20 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
   const showLabel = !stimulusIsDupOfPart && (!!question.stimulus || sqParts.length > 1);
   const subjectColor = SUBJECT_COLORS[question.subject] || 'var(--text-faint)';
   const shouldDim = question.hidden || isRead;
+
+  // Report/flag button — shown in the Explanation/Solution title row once the
+  // student has revealed it. Student-side only.
+  const flagBtn = (!isAdmin && onToggleFlag) ? (
+    <button
+      className={`flag-btn ${isFlagged ? 'flagged' : ''}`}
+      onClick={onToggleFlag}
+      title={isFlagged ? 'রিপোর্ট করা হয়েছে — বাতিল করতে চাপুন' : 'এই প্রশ্ন বা ব্যাখ্যায় ভুল থাকলে রিপোর্ট করুন'}
+      aria-label="Report a mistake"
+    >
+      <I.Flag filled={isFlagged} />
+      <span>{isFlagged ? 'Flagged' : 'Raise flag'}</span>
+    </button>
+  ) : null;
 
   return (
     <article
@@ -1468,7 +1524,10 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
           )}
           {(sol || isAdmin) && question.explanation && (
             <div className="section">
-              <div className="section-title">Explanation</div>
+              <div className="section-title-row">
+                <span className="section-title">Explanation</span>
+                {flagBtn}
+              </div>
               <EditableText text={question.explanation} isEditable={isAdmin} highlight={searchQuery} style={{ fontSize: '0.94rem', color: 'var(--text)', lineHeight: 1.6 }} onSave={(v: string) => onUpdateField?.('explanation', v)} />
             </div>
           )}
@@ -1487,7 +1546,10 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
           </div>
           {(sol || isAdmin) && (
             <div className="section">
-              <div className="section-title">Solution</div>
+              <div className="section-title-row">
+                <span className="section-title">Solution</span>
+                {flagBtn}
+              </div>
               <EditableText text={question.solution || ""} isEditable={isAdmin} highlight={searchQuery} style={{ fontSize: '0.94rem', color: 'var(--text)', lineHeight: 1.6 }} onSave={(v: string) => onUpdateField?.('solution', v)} />
             </div>
           )}
@@ -1496,10 +1558,11 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
       {!isAdmin && (
         question.type === 'mcq' ? (
           <div className="card-footer">
-            <button className={`toggle-btn ${optRevealed ? 'active' : ''}`} onClick={() => setOptRevealed(!optRevealed)}>
+            <button className={`toggle-btn ${optRevealed ? 'active' : ''}`} onClick={() => { feedback('tap'); setOptRevealed(!optRevealed); }}>
               <I.List /> Options
             </button>
             <button className={`toggle-btn ${ansRevealed ? 'active' : ''}`} onClick={() => {
+              feedback('tap');
               const newVal = !ansRevealed;
               setAnsRevealed(newVal);
               if (!newVal) setSol(false);
@@ -1507,6 +1570,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
               <I.Target /> Answer
             </button>
             <button className={`toggle-btn ${sol ? 'active' : ''}`} onClick={() => {
+              feedback('tap');
               const newVal = !sol;
               setSol(newVal);
               if (newVal) setAnsRevealed(true);
@@ -1515,7 +1579,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
             </button>
           </div>
         ) : (
-          <div className={`sq-footer ${sol ? 'active' : ''}`} onClick={() => setSol(!sol)}>
+          <div className={`sq-footer ${sol ? 'active' : ''}`} onClick={() => { feedback('tap'); setSol(!sol); }}>
             <I.Bulb /> {sol ? 'Hide Solution' : 'View Solution'}
           </div>
         )
@@ -1598,6 +1662,8 @@ function AdminDashboard({
   const [fontEn, setFontEn] = useState("'Times New Roman', serif");
   const [bannerEnabledLocal, setBannerEnabledLocal] = useState(false);
   const [bannerMessageLocal, setBannerMessageLocal] = useState('প্রশ্ন আপলোডের কাজ চলছে');
+  const [hapticsLocal, setHapticsLocal] = useState(true);
+  const [soundLocal, setSoundLocal] = useState(true);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -1607,6 +1673,8 @@ function AdminDashboard({
         if (data.font_en) setFontEn(data.font_en);
         if (typeof data.banner_enabled === 'boolean') setBannerEnabledLocal(data.banner_enabled);
         if (typeof data.banner_message === 'string' && data.banner_message) setBannerMessageLocal(data.banner_message);
+        if (typeof data.haptics_enabled === 'boolean') setHapticsLocal(data.haptics_enabled);
+        if (typeof data.sound_enabled === 'boolean') setSoundLocal(data.sound_enabled);
       }
     };
     fetchSettings();
@@ -1625,6 +1693,15 @@ function AdminDashboard({
     });
     if (r.error) alert("Error saving banner: " + r.error);
     else alert("Banner saved!");
+  };
+
+  const saveFeedback = async () => {
+    const r = await adminCall('update_settings', {
+      haptics_enabled: hapticsLocal,
+      sound_enabled: soundLocal,
+    });
+    if (r.error) alert("Error saving feedback settings: " + r.error);
+    else alert("Feedback settings saved!");
   };
 
   const handleBulkUpload = async () => {
@@ -1815,6 +1892,22 @@ function AdminDashboard({
             style={{ marginBottom: '1rem', width: '100%' }}
           />
           <button className="btn btn-primary" onClick={saveBanner}>Save Banner</button>
+        </div>
+
+        <div className="admin-section">
+          <h4>Feedback (Haptics &amp; Sound)</h4>
+          <p style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '0.25rem', marginBottom: '1rem' }}>
+            Vibration + tap/answer sounds on the student side. Turn off globally if needed.
+          </p>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', marginBottom: '0.6rem', fontSize: '0.88rem', fontWeight: 600, cursor: 'pointer' }}>
+            <input type="checkbox" checked={hapticsLocal} onChange={e => setHapticsLocal(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }} />
+            Haptics (vibration)
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', marginBottom: '1rem', fontSize: '0.88rem', fontWeight: 600, cursor: 'pointer' }}>
+            <input type="checkbox" checked={soundLocal} onChange={e => setSoundLocal(e.target.checked)} style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--primary)' }} />
+            Sound effects
+          </label>
+          <button className="btn btn-primary" onClick={saveFeedback}>Save Feedback Settings</button>
         </div>
 
         <div className="admin-section" style={{ display: 'flex', flexDirection: 'column', minHeight: '400px' }}>
