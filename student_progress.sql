@@ -16,8 +16,14 @@
 CREATE TABLE IF NOT EXISTS public.student_progress (
   student_phone     text PRIMARY KEY,
   read_question_ids text[] NOT NULL DEFAULT '{}',
+  filters           jsonb  NOT NULL DEFAULT '{}'::jsonb,
   updated_at        timestamptz NOT NULL DEFAULT now()
 );
+
+-- filters: last-used filter selection, e.g.
+--   { "inst": ["NDC"], "sub": ["Physics"], "type": ["mcq"], "year": ["2024"] }
+ALTER TABLE public.student_progress
+  ADD COLUMN IF NOT EXISTS filters jsonb NOT NULL DEFAULT '{}'::jsonb;
 
 ALTER TABLE public.student_progress ENABLE ROW LEVEL SECURITY;
 

@@ -134,7 +134,7 @@ const GROUP_SUBJECTS: Record<Group, string[]> = {
   // Subject names must match the DB exactly (intersected against the live
   // subject list, so a name with no rows simply won't appear in the modal).
   science:    ['Physics', 'Chemistry', 'Biology', 'Math', 'ICT', 'Bangla', 'English', 'GK'],
-  bst:        ['Accounting', 'Business Entrepreneurship', 'Finance and Banking', 'Economics', 'Math', 'ICT', 'Bangla', 'English', 'GK'],
+  bst:        ['Accounting', 'Business Entrepreneurship', 'Finance and Banking', 'Math', 'ICT', 'Bangla', 'English', 'GK'],
   humanities: ['Civics', 'History', 'Geography', 'Economics', 'Math', 'ICT', 'Bangla', 'English', 'GK'],
 };
 
@@ -154,20 +154,13 @@ function readGroup(): Group | null {
   return null;
 }
 
-/* ============ Saved filters (persist last selection across reloads) ============ */
-const FILTERS_KEY = 'lastFilters';
+/* ============ Saved filters (persisted per student in student_progress) ============ */
 type SavedFilters = { inst: string[]; sub: string[]; type: string[]; year: string[] };
 
-function readSavedFilters(): SavedFilters {
-  const empty: SavedFilters = { inst: [], sub: [], type: [], year: [] };
-  if (typeof window === 'undefined') return empty;
-  try {
-    const raw = localStorage.getItem(FILTERS_KEY);
-    if (!raw) return empty;
-    const f = JSON.parse(raw);
-    const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
-    return { inst: arr(f.inst), sub: arr(f.sub), type: arr(f.type), year: arr(f.year) };
-  } catch { return empty; }
+function parseFilters(f: unknown): SavedFilters {
+  const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : []);
+  const o = (f && typeof f === 'object') ? f as Record<string, unknown> : {};
+  return { inst: arr(o.inst), sub: arr(o.sub), type: arr(o.type), year: arr(o.year) };
 }
 
 interface Settings {
@@ -701,22 +694,60 @@ function App() {
   // read tracking — swipe gesture is disabled for them.
   const [readSet, setReadSet] = useState<Set<string>>(new Set());
 
+  // Filter selections (restored from / saved to student_progress.filters).
+  const [selInst, setSelInst] = useState<string[]>([]);
+  const [selSub, setSelSub] = useState<string[]>([]);
+  const [selType, setSelType] = useState<string[]>([]);
+  const [selYear, setSelYear] = useState<string[]>([]);
+  // Gates the first feed fetch until saved filters load from the DB (avoids a
+  // flash of unfiltered content).
+  const [filtersRestored, setFiltersRestored] = useState(false);
+
   useEffect(() => {
     const phone = student?.phone;
-    if (!phone) { setReadSet(new Set()); return; }
+    const admin = wantsAdmin && !!adminSession;
+    // Admin view doesn't use read tracking or saved student filters.
+    if (admin || !phone) {
+      setReadSet(new Set());
+      setFiltersRestored(true);
+      return;
+    }
     let cancelled = false;
     supabase
       .from('student_progress')
-      .select('read_question_ids')
+      .select('read_question_ids, filters')
       .eq('student_phone', phone)
       .maybeSingle()
       .then(({ data, error }) => {
-        if (cancelled || error || !data) return;
-        const ids = (data as { read_question_ids?: string[] }).read_question_ids ?? [];
-        setReadSet(new Set(ids));
+        if (cancelled) return;
+        if (!error && data) {
+          const ids = (data as { read_question_ids?: string[] }).read_question_ids ?? [];
+          setReadSet(new Set(ids));
+          const f = parseFilters((data as { filters?: unknown }).filters);
+          setSelInst(f.inst);
+          setSelSub(f.sub);
+          setSelType(f.type);
+          setSelYear(f.year);
+        }
+        setFiltersRestored(true);
       });
     return () => { cancelled = true; };
-  }, [student?.phone]);
+  }, [student?.phone, wantsAdmin, adminSession]);
+
+  // Persist the filter selection to the student's row (debounced). Skipped
+  // until restore completes so the initial empty state can't overwrite it.
+  useEffect(() => {
+    const phone = student?.phone;
+    const admin = wantsAdmin && !!adminSession;
+    if (admin || !phone || !filtersRestored) return;
+    const t = setTimeout(() => {
+      supabase
+        .from('student_progress')
+        .upsert({ student_phone: phone, filters: { inst: selInst, sub: selSub, type: selType, year: selYear } })
+        .then(({ error }) => { if (error) console.error('[saveFilters]', error); });
+    }, 600);
+    return () => clearTimeout(t);
+  }, [selInst, selSub, selType, selYear, student?.phone, wantsAdmin, adminSession, filtersRestored]);
 
   const toggleRead = useCallback(async (questionId: string) => {
     const phone = student?.phone;
@@ -882,21 +913,6 @@ function App() {
   const [subjectOptions, setSubjectOptions] = useState<string[]>([]);
   const [typeOptions] = useState<string[]>(['MCQ', 'SQ']);
   const [yearOptions, setYearOptions] = useState<string[]>([]);
-
-  // Filters initialize from the student's last saved selection so a reload /
-  // app restart keeps their filters. (Restoring in the initializer — not a
-  // post-mount effect — avoids the save-effect overwriting it with empties.)
-  const [selInst, setSelInst] = useState<string[]>(() => readSavedFilters().inst);
-  const [selSub, setSelSub] = useState<string[]>(() => readSavedFilters().sub);
-  const [selType, setSelType] = useState<string[]>(() => readSavedFilters().type);
-  const [selYear, setSelYear] = useState<string[]>(() => readSavedFilters().year);
-
-  // Persist filters whenever they change.
-  useEffect(() => {
-    try {
-      localStorage.setItem(FILTERS_KEY, JSON.stringify({ inst: selInst, sub: selSub, type: selType, year: selYear }));
-    } catch { /* ignore */ }
-  }, [selInst, selSub, selType, selYear]);
 
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
@@ -1116,11 +1132,14 @@ function App() {
     return () => observer.disconnect();
   }, [loading, hasMore, isFetchingMore, loadQuestions, isAdmin]);
 
-  // Re-fetch on filters / admin / group / search change
+  // Re-fetch on filters / admin / group / search change. Gated on
+  // filtersRestored so we don't fetch with empty filters before the saved
+  // selection loads from the DB (avoids a flash of unfiltered content).
   useEffect(() => {
+    if (!filtersRestored) return;
     if (isAdmin || studyGroup) loadQuestions(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selInst, selSub, selType, selYear, isAdmin, studyGroup, debouncedQuery]);
+  }, [selInst, selSub, selType, selYear, isAdmin, studyGroup, debouncedQuery, filtersRestored]);
 
   const updateQuestions = (newQuestions: Question[]) => setQuestions(newQuestions);
 
