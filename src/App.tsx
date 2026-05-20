@@ -43,26 +43,6 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, EBState> {
   }
 }
 
-/* ============ In-app browser detection ============ */
-function detectInAppBrowser(): string | null {
-  if (typeof navigator === 'undefined') return null;
-  const ua = navigator.userAgent;
-  const m = ua.toLowerCase();
-  if (m.includes('fban') || m.includes('fbav') || m.includes('fb_iab')) return 'Facebook';
-  if (m.includes('messenger')) return 'Messenger';
-  if (m.includes('instagram')) return 'Instagram';
-  if (m.includes('whatsapp')) return 'WhatsApp';
-  if (m.includes('line/')) return 'Line';
-  if (m.includes('twitter') || m.includes('twitterandroid')) return 'Twitter/X';
-  if (m.includes('tiktok')) return 'TikTok';
-  if (m.includes('snapchat')) return 'Snapchat';
-  // Generic Android WebView signal: " wv)" token in UA.
-  if (/android.*;\s*wv\)/i.test(ua)) return 'In-app';
-  return null;
-}
-
-const IAB_DISMISS_KEY = 'iabBannerDismissed';
-
 interface Question {
   id: string;
   serial?: string | number;
@@ -946,16 +926,6 @@ function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
 
-  // In-app browser banner (shown once, dismissible)
-  const [iabKind] = useState<string | null>(() => detectInAppBrowser());
-  const [iabDismissed, setIabDismissed] = useState<boolean>(() => {
-    try { return localStorage.getItem(IAB_DISMISS_KEY) === '1'; } catch { return false; }
-  });
-  const dismissIabBanner = () => {
-    try { localStorage.setItem(IAB_DISMISS_KEY, '1'); } catch { /* ignore */ }
-    setIabDismissed(true);
-  };
-
   // Announcement banner (driven by settings.banner_enabled / banner_message).
   // Auto-hides on first scroll. Re-renders on realtime settings updates.
   const [bannerEnabled, setBannerEnabled] = useState(false);
@@ -1313,12 +1283,6 @@ function App() {
           {bannerEnabled && bannerMessage && (
             <div className={`announce-banner ${announceVisible ? '' : 'announce-hidden'}`} role="status">
               <span>{bannerMessage}</span>
-            </div>
-          )}
-          {iabKind && !iabDismissed && (
-            <div className="iab-banner" role="note">
-              <span>For the best experience, open this page in Chrome or Safari ({iabKind}-এ চলছে).</span>
-              <button onClick={dismissIabBanner} aria-label="Dismiss"><I.Close size={14} /></button>
             </div>
           )}
           <div className="sticky-top">
