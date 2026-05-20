@@ -145,13 +145,8 @@ const GROUP_SUBJECTS: Record<Group, string[]> = {
 // default feed. Admin sees the full set.
 const INSTITUTION_ORDER = ['NDC', 'HCC', 'SJHSS'];
 
-const GROUP_KEY = 'studyGroup';
-
-function readGroup(): Group | null {
-  if (typeof window === 'undefined') return null;
-  const raw = localStorage.getItem(GROUP_KEY);
-  if (raw === 'science' || raw === 'bst' || raw === 'humanities') return raw;
-  return null;
+function isGroup(v: unknown): v is Group {
+  return v === 'science' || v === 'bst' || v === 'humanities';
 }
 
 /* ============ Saved filters (persisted per student in student_progress) ============ */
@@ -392,7 +387,7 @@ function MultiSelectModal({ title, options, selected, onToggle, onClose, onSelec
           <div style={{ display: 'flex', gap: '0.4rem' }}>
             <button className="filter-btn" style={{ padding: '0.35rem 0.7rem', fontSize: '0.76rem' }} onClick={onSelectAll}>সব</button>
             <button className="filter-btn" style={{ padding: '0.35rem 0.7rem', fontSize: '0.76rem' }} onClick={onClear}>মুছে দাও</button>
-            <button className="filter-btn active" style={{ padding: '0.35rem 0.85rem', fontSize: '0.76rem' }} onClick={onClose}>সম্পন্ন</button>
+            <button className="filter-btn" style={{ padding: '0.35rem 0.85rem', fontSize: '0.76rem', background: 'var(--correct)', borderColor: 'var(--correct)', color: 'white' }} onClick={onClose} aria-label="Done"><I.Check size={16} /></button>
           </div>
         </div>
         <div className="option-grid">
@@ -468,7 +463,7 @@ function Sidebar({ isOpen, onClose, settings, onSettingChange, theme, onThemeCha
 }
 
 /* ============ Group selector ============ */
-function GroupSelector({ onSelect, onCancel }: { onSelect: (g: Group) => void; onCancel?: () => void }) {
+function GroupSelector({ onSelect, onCancel, currentGroup }: { onSelect: (g: Group) => void; onCancel?: () => void; currentGroup?: Group | null }) {
   return (
     <div className="group-selector">
       <div className="group-card-wrap">
@@ -476,12 +471,12 @@ function GroupSelector({ onSelect, onCancel }: { onSelect: (g: Group) => void; o
         <div className="group-sub">Choose your stream to tailor your feed.</div>
         <div className="group-cards">
           {(Object.keys(GROUP_LABELS) as Group[]).map(g => (
-            <button key={g} className="group-card" onClick={() => onSelect(g)}>
+            <button key={g} className={`group-card ${g === currentGroup ? 'group-card-current' : ''}`} onClick={() => onSelect(g)}>
               <span>
                 {GROUP_LABELS[g]}
                 <span className="group-card-sub">{GROUP_SUBJECTS[g].slice(0, 4).map(displaySubject).join(' · ')}{GROUP_SUBJECTS[g].length > 4 ? ' …' : ''}</span>
               </span>
-              <span className="group-card-arrow"><I.Chevron size={16} /></span>
+              <span className="group-card-arrow">{g === currentGroup ? <I.Check size={18} /> : <I.Chevron size={16} />}</span>
             </button>
           ))}
         </div>
@@ -679,7 +674,10 @@ function App() {
   const [adminSession, setAdminSession] = useState<AdminSession | null>(() => readAdminSession());
 
   // Student study group (Bengali stream)
-  const [studyGroup, setStudyGroup] = useState<Group | null>(() => readGroup());
+  // Group is NOT persisted locally — the picker shows on every app entry.
+  // lastGroup (from Supabase) just pre-highlights the previous choice.
+  const [studyGroup, setStudyGroup] = useState<Group | null>(null);
+  const [lastGroup, setLastGroup] = useState<Group | null>(null);
   const [isChoosingGroup, setIsChoosingGroup] = useState(false);
 
   // Student identity (captured from ?name=&phone= in the URL on first hit;
@@ -715,7 +713,7 @@ function App() {
     let cancelled = false;
     supabase
       .from('student_progress')
-      .select('read_question_ids, filters')
+      .select('read_question_ids, filters, study_group')
       .eq('student_phone', phone)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -728,6 +726,8 @@ function App() {
           setSelSub(f.sub);
           setSelType(f.type);
           setSelYear(f.year);
+          const g = (data as { study_group?: unknown }).study_group;
+          if (isGroup(g)) setLastGroup(g);
         }
         setFiltersRestored(true);
       });
@@ -1159,10 +1159,17 @@ function App() {
   };
 
   const pickGroup = (g: Group) => {
-    localStorage.setItem(GROUP_KEY, g);
     setStudyGroup(g);
+    setLastGroup(g);
     setSelSub([]); // previously selected subjects may not exist in the new group
     setIsChoosingGroup(false);
+    const phone = student?.phone;
+    if (phone) {
+      supabase
+        .from('student_progress')
+        .upsert({ student_phone: phone, study_group: g })
+        .then(({ error }) => { if (error) console.error('[saveGroup]', error); });
+    }
   };
 
   // Subjects shown in the student-side filter modal — intersect DB subjects
@@ -1186,6 +1193,7 @@ function App() {
     return (
       <GroupSelector
         onSelect={pickGroup}
+        currentGroup={lastGroup}
         onCancel={isChoosingGroup && studyGroup ? () => setIsChoosingGroup(false) : undefined}
       />
     );

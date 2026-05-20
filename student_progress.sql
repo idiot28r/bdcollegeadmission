@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS public.student_progress (
   student_phone     text PRIMARY KEY,
   read_question_ids text[] NOT NULL DEFAULT '{}',
   filters           jsonb  NOT NULL DEFAULT '{}'::jsonb,
+  study_group       text,
   updated_at        timestamptz NOT NULL DEFAULT now()
 );
 
@@ -24,6 +25,12 @@ CREATE TABLE IF NOT EXISTS public.student_progress (
 --   { "inst": ["NDC"], "sub": ["Physics"], "type": ["mcq"], "year": ["2024"] }
 ALTER TABLE public.student_progress
   ADD COLUMN IF NOT EXISTS filters jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+-- study_group: last-chosen stream ('science' | 'bst' | 'humanities').
+-- The group picker is shown on every app entry; this just records the last
+-- pick so the picker can pre-highlight it.
+ALTER TABLE public.student_progress
+  ADD COLUMN IF NOT EXISTS study_group text;
 
 ALTER TABLE public.student_progress ENABLE ROW LEVEL SECURITY;
 

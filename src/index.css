@@ -1263,6 +1263,14 @@ input:checked + .slider:before {
   background: var(--primary-tint);
   transform: translateY(-1px);
 }
+.group-card-current {
+  border-color: var(--primary);
+  background: var(--primary-tint);
+}
+.group-card-current .group-card-arrow {
+  color: var(--correct);
+  transform: none;
+}
 .group-card-sub {
   display: block;
   font-family: var(--font-ui);
