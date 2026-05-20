@@ -103,6 +103,22 @@ const SUBJECT_BN: Record<string, string> = {
 };
 const displaySubject = (s: string) => SUBJECT_BN[s] ?? s;
 
+// Bangla display names for institutions (DB keeps the short codes).
+const INSTITUTION_BN: Record<string, string> = {
+  NDC: 'নটর ডেম',
+  HCC: 'হলিক্রস',
+  SJHSS: 'সেন্ট যোসেফ',
+};
+const displayInstitution = (s: string) => INSTITUTION_BN[s] ?? s;
+
+// Years shown in Bengali numerals (DB keeps Arabic). "Practice" -> অনুশীলন.
+const BN_DIGITS = ['০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯'];
+function displayYear(y: string | number | undefined | null): string {
+  const s = String(y ?? '');
+  if (s.trim().toLowerCase() === 'practice') return 'অনুশীলন';
+  return s.replace(/[0-9]/g, d => BN_DIGITS[+d]);
+}
+
 const SUBJECT_COLORS: Record<string, string> = {
   Physics: 'var(--color-physics)',
   Chemistry: 'var(--color-chemistry)',
@@ -1412,16 +1428,16 @@ function FilterBar({ collegeOptions, subjectOptions, typeOptions, yearOptions, s
 
   return (
     <div className="filter-row" style={{ gridTemplateColumns: hasAnyFilter ? 'repeat(4, 1fr) 40px' : 'repeat(4, 1fr)' }}>
-      <button className={`filter-btn ${selInst.length ? 'active' : ''}`} onClick={() => setModal('Inst')}><span>{label('কলেজ', selInst)}</span><I.Chevron /></button>
+      <button className={`filter-btn ${selInst.length ? 'active' : ''}`} onClick={() => setModal('Inst')}><span>{label('কলেজ', selInst, displayInstitution)}</span><I.Chevron /></button>
       <button className={`filter-btn ${selSub.length ? 'active' : ''}`} onClick={() => setModal('Subj')}><span>{label('বিষয়', selSub, displaySubject)}</span><I.Chevron /></button>
       <button className={`filter-btn ${selType.length ? 'active' : ''}`} onClick={() => setModal('Type')}><span>{label('ধরণ', selType)}</span><I.Chevron /></button>
-      <button className={`filter-btn ${selYear.length ? 'active' : ''}`} onClick={() => setModal('Year')}><span>{label('বছর', selYear)}</span><I.Chevron /></button>
+      <button className={`filter-btn ${selYear.length ? 'active' : ''}`} onClick={() => setModal('Year')}><span>{label('বছর', selYear, displayYear)}</span><I.Chevron /></button>
       {hasAnyFilter && <button className="filter-btn filter-clear" onClick={onClear} title="সব ফিল্টার মুছে দাও" aria-label="Clear all filters"><I.Close /></button>}
 
-      {modal === 'Inst' && <MultiSelectModal title="কলেজ" options={collegeOptions} selected={selInst} onToggle={(v: string) => toggle(setSelInst, v)} onSelectAll={() => setSelInst(collegeOptions)} onClear={() => setSelInst([])} onClose={() => setModal(null)} />}
+      {modal === 'Inst' && <MultiSelectModal title="কলেজ" options={collegeOptions} selected={selInst} onToggle={(v: string) => toggle(setSelInst, v)} onSelectAll={() => setSelInst(collegeOptions)} onClear={() => setSelInst([])} onClose={() => setModal(null)} getDisplay={displayInstitution} />}
       {modal === 'Subj' && <MultiSelectModal title="বিষয়" options={subjectOptions} selected={selSub} onToggle={(v: string) => toggle(setSelSub, v)} onSelectAll={() => setSelSub(subjectOptions)} onClear={() => setSelSub([])} onClose={() => setModal(null)} getDisplay={displaySubject} />}
       {modal === 'Type' && <MultiSelectModal title="ধরণ" options={typeOptions} selected={selType} onToggle={(v: string) => toggle(setSelType, v)} onSelectAll={() => setSelType(typeOptions)} onClear={() => setSelType([])} onClose={() => setModal(null)} />}
-      {modal === 'Year' && <MultiSelectModal title="বছর" options={yearOptions} selected={selYear} onToggle={(v: string) => toggle(setSelYear, v)} onSelectAll={() => setSelYear(yearOptions)} onClear={() => setSelYear([])} onClose={() => setModal(null)} />}
+      {modal === 'Year' && <MultiSelectModal title="বছর" options={yearOptions} selected={selYear} onToggle={(v: string) => toggle(setSelYear, v)} onSelectAll={() => setSelYear(yearOptions)} onClear={() => setSelYear([])} onClose={() => setModal(null)} getDisplay={displayYear} />}
     </div>
   );
 }
@@ -1498,7 +1514,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
     >
       <div className="card-meta">
         <span className="badge badge-subject" style={{ background: subjectColor }}>{displaySubject(question.subject)}</span>
-        <span className="badge-meta">{question.institution} · {question.year}</span>
+        <span className="badge-meta">{displayInstitution(question.institution)} · {displayYear(question.year)}</span>
         <div className="card-meta-end">
           {question.serial && <span className="badge-serial">#{question.serial}</span>}
         </div>

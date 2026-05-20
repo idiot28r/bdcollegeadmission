@@ -59,8 +59,9 @@
   --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.35);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.55);
 
-  /* Sticky top bar — subtle purple tint to set it apart from the feed */
-  --topbar-bg: rgba(40, 33, 66, 0.86);
+  /* Sticky top bar — same as the card surface, with a very subtle purple
+     accent to set it apart from the feed background */
+  --topbar-bg: color-mix(in srgb, var(--primary) 9%, var(--surface));
 
   /* Subject color coding (dark-tuned, kept per request) */
   --color-physics: #60a5fa;
@@ -116,7 +117,7 @@
   --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.10);
 
-  --topbar-bg: rgba(237, 234, 252, 0.88);
+  --topbar-bg: color-mix(in srgb, var(--primary) 6%, var(--surface));
 
   --color-physics: #3b82f6;
   --color-chemistry: #10b981;
