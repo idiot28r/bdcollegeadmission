@@ -1,0 +1,11 @@
+# Minimal Supabase CLI config — only purpose is to preserve verify_jwt = false
+# on every `supabase functions deploy admin-op`. The function does its own
+# auth (admin username + password via the admin_login RPC), and our anon key
+# is the new sb_publishable_* format which is not a JWT, so the gateway's
+# default JWT check would reject every call. See the function source for
+# the in-function auth flow.
+
+project_id = "dkddteyqizqplakbgrpa"
+
+[functions.admin-op]
+verify_jwt = false
