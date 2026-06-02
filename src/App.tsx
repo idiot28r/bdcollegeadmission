@@ -1597,6 +1597,224 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
   );
 }
 
+/* ============ Bulk Upload page (stage → summarize → normalize → insert) ============ */
+const BULK_INSTITUTIONS = ['NDC', 'HCC', 'SJHSS'];
+const BULK_SUBJECTS = ['Physics', 'Chemistry', 'Math', 'Biology', 'English', 'GK', 'Bangla', 'ICT', 'Accounting', 'Finance and Banking', 'Business Entrepreneurship', 'Economics'];
+const BULK_TYPES = ['mcq', 'sq'];
+
+type MetaField = 'institution' | 'year' | 'subject' | 'type';
+const META_FIELDS: { key: MetaField; label: string; options: string[] | null }[] = [
+  { key: 'institution', label: 'Institution', options: BULK_INSTITUTIONS },
+  { key: 'year', label: 'Year', options: null },
+  { key: 'subject', label: 'Subject', options: BULK_SUBJECTS },
+  { key: 'type', label: 'Type', options: BULK_TYPES },
+];
+
+function questionWarnings(q: Question): string[] {
+  const w: string[] = [];
+  const inst = String(q.institution ?? '');
+  const subj = String(q.subject ?? '');
+  const typ = String(q.type ?? '');
+  if (!BULK_INSTITUTIONS.includes(inst)) w.push(`institution "${inst || '—'}" off-list`);
+  if (!BULK_SUBJECTS.includes(subj)) w.push(`subject "${subj || '—'}" off-list`);
+  if (!BULK_TYPES.includes(typ)) w.push(`type "${typ || '—'}" not mcq/sq`);
+  if (q.year === undefined || q.year === null || q.year === '') w.push('missing year');
+  if (typ === 'mcq') {
+    if (!q.question || !String(q.question).trim()) w.push('empty question text');
+    if (!Array.isArray(q.options) || q.options.length !== 4) w.push(`MCQ needs 4 options (has ${Array.isArray(q.options) ? q.options.length : 0})`);
+    if (typeof q.answer_index !== 'number' || q.answer_index < 0 || q.answer_index > 3) w.push('answer_index must be 0–3');
+  }
+  if (typ === 'sq') {
+    const hasParts = Array.isArray(q.parts) && q.parts.length > 0;
+    if (!hasParts && !(q.stimulus && String(q.stimulus).trim())) w.push('SQ missing both stimulus and parts');
+  }
+  return w;
+}
+
+function BulkUploadPage({ adminCall, onUploaded, copyPrompt }: {
+  adminCall: <T = unknown>(op: string, payload: unknown) => Promise<AdminResult<T>>;
+  onUploaded: (qs: Question[]) => void;
+  copyPrompt: () => void;
+}) {
+  const [jsonInput, setJsonInput] = useState('');
+  const [loaded, setLoaded] = useState<Question[]>([]);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [targets, setTargets] = useState<Record<string, string>>({});
+
+  const parse = () => {
+    if (!jsonInput.trim()) { setLoaded([]); setError(''); return; }
+    try {
+      const parsed = JSON.parse(jsonInput);
+      setLoaded(Array.isArray(parsed) ? parsed : [parsed]);
+      setError('');
+      setTargets({});
+    } catch {
+      setError('Invalid JSON — check for trailing commas or unescaped quotes.');
+      setLoaded([]);
+    }
+  };
+
+  const setAll = (field: MetaField, value: string) => {
+    if (!value) return;
+    setLoaded(prev => prev.map(q => ({ ...q, [field]: value } as Question)));
+  };
+  const reassign = (field: MetaField, oldVal: string, newVal: string) => {
+    if (!newVal || newVal === oldVal) return;
+    setLoaded(prev => prev.map(q => (String(q[field] ?? '—') === oldVal ? ({ ...q, [field]: newVal } as Question) : q)));
+  };
+  const dist = (field: MetaField): [string, number][] => {
+    const m = new Map<string, number>();
+    for (const q of loaded) { const v = String(q[field] ?? '—'); m.set(v, (m.get(v) ?? 0) + 1); }
+    return [...m.entries()].sort((a, b) => b[1] - a[1]);
+  };
+  const mergedOpts = (field: { key: MetaField; options: string[] | null }): string[] =>
+    Array.from(new Set([...(field.options ?? []), ...dist(field.key).map(d => d[0])])).filter(v => v && v !== '—');
+  const updateOne = (i: number, field: keyof Question, value: unknown) => {
+    setLoaded(prev => { const u = [...prev]; u[i] = { ...u[i], [field]: value } as Question; return u; });
+  };
+  const optsWith = (base: string[], val: unknown): string[] => {
+    const v = (val === undefined || val === null || val === '') ? null : String(val);
+    return v && !base.includes(v) ? [v, ...base] : base;
+  };
+
+  const warnings = loaded.map(questionWarnings);
+  const warnCount = warnings.filter(w => w.length > 0).length;
+
+  const save = async () => {
+    if (!loaded.length) return;
+    setSaving(true);
+    const r = await adminCall<Question[]>('insert_questions', loaded);
+    setSaving(false);
+    if (r.error) { alert('Error saving: ' + r.error); return; }
+    alert(`Saved ${r.data?.length ?? loaded.length} question(s) to the database.`);
+    if (r.data) onUploaded(r.data);
+    setJsonInput(''); setLoaded([]); setError(''); setTargets({});
+  };
+
+  return (
+    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <div className="admin-section">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <h4 style={{ margin: 0 }}>1. Paste questions (JSON)</h4>
+          <button className="btn btn-secondary" onClick={copyPrompt} style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>📋 Copy Prompt</button>
+        </div>
+        <textarea className="json-textarea" placeholder="Paste a JSON array of questions here..." value={jsonInput} onChange={e => setJsonInput(e.target.value)} style={{ width: '100%', minHeight: '180px' }} />
+        {error && <p className="error-msg">{error}</p>}
+        <div className="admin-actions" style={{ marginTop: '0.5rem' }}>
+          <button className="btn btn-primary" onClick={parse}>🔍 Load &amp; Analyze</button>
+          <button className="btn btn-secondary" onClick={() => { setJsonInput(''); setLoaded([]); setError(''); setTargets({}); }}>Reset</button>
+        </div>
+      </div>
+
+      {loaded.length > 0 && (
+        <>
+          <div className="admin-section">
+            <h4 style={{ marginTop: 0 }}>2. Metadata summary — {loaded.length} question{loaded.length > 1 ? 's' : ''} loaded</h4>
+            {META_FIELDS.map(field => {
+              const d = dist(field.key);
+              const opts = mergedOpts(field);
+              const target = targets[field.key] ?? (d[0]?.[0] ?? '');
+              const isUniform = d.length === 1;
+              return (
+                <div key={field.key} style={{ borderTop: '1px solid var(--border, #e2e8f0)', padding: '0.75rem 0' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <strong style={{ minWidth: '90px' }}>{field.label}</strong>
+                    {isUniform
+                      ? <span style={{ color: 'var(--correct, #16a34a)', fontSize: '0.85rem' }}>✓ all {loaded.length} = “{d[0][0]}”</span>
+                      : <span style={{ color: 'var(--wrong, #dc2626)', fontSize: '0.85rem' }}>⚠ {d.length} different values</span>}
+                    <span style={{ flex: 1 }} />
+                    <span style={{ fontSize: '0.8rem', color: '#64748b' }}>Set ALL →</span>
+                    {field.options
+                      ? <select className="edit-input" style={{ width: 'auto' }} value={target} onChange={e => setTargets(t => ({ ...t, [field.key]: e.target.value }))}>
+                          {opts.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      : <input className="edit-input" style={{ width: '120px' }} list={`dl-${field.key}`} value={target} onChange={e => setTargets(t => ({ ...t, [field.key]: e.target.value }))} />}
+                    {!field.options && <datalist id={`dl-${field.key}`}>{Array.from(new Set(['2019', '2020', '2021', '2022', '2023', '2024', 'Practice', ...opts])).map(o => <option key={o} value={o} />)}</datalist>}
+                    <button className="btn btn-primary" style={{ fontSize: '0.75rem', padding: '0.25rem 0.6rem' }} onClick={() => setAll(field.key, target)}>Apply to all</button>
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
+                    {d.map(([val, count]) => {
+                      const offList = field.options ? !field.options.includes(val) : false;
+                      return (
+                        <span key={val} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: offList ? 'rgba(220,38,38,0.08)' : 'var(--surface-2, #f1f5f9)', border: offList ? '1px solid rgba(220,38,38,0.4)' : '1px solid transparent', borderRadius: '999px', padding: '0.2rem 0.6rem', fontSize: '0.8rem' }}>
+                          {field.options
+                            ? <select value={val} onChange={e => reassign(field.key, val, e.target.value)} style={{ border: 'none', background: 'transparent', fontWeight: 600, cursor: 'pointer' }}>
+                                {Array.from(new Set([val, ...opts])).map(o => <option key={o} value={o}>{o}</option>)}
+                              </select>
+                            : <input defaultValue={val} onBlur={e => reassign(field.key, val, e.target.value)} style={{ border: 'none', background: 'transparent', fontWeight: 600, width: `${Math.max(3, val.length + 1)}ch` }} />}
+                          <span style={{ color: '#64748b' }}>×{count}</span>
+                          {offList && <span title="not in the canonical list">⚠</span>}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="admin-section">
+            <h4 style={{ marginTop: 0 }}>3. Validation {warnCount === 0 ? '✓' : `— ${warnCount} question${warnCount > 1 ? 's' : ''} need attention`}</h4>
+            {warnCount === 0
+              ? <p style={{ color: 'var(--correct, #16a34a)', fontSize: '0.85rem' }}>All loaded questions look structurally valid.</p>
+              : <ul style={{ margin: 0, paddingLeft: '1.1rem', fontSize: '0.82rem', color: 'var(--wrong, #dc2626)' }}>
+                  {warnings.map((w, i) => w.length > 0 ? <li key={i}>Q{i + 1}: {w.join('; ')}</li> : null)}
+                </ul>}
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button className="btn btn-primary" disabled={saving} onClick={save}>{saving ? 'Saving…' : `💾 Save ${loaded.length} to database`}</button>
+            {warnCount > 0 && <span style={{ fontSize: '0.8rem', color: 'var(--wrong, #dc2626)' }}>{warnCount} have warnings — you can still save, but review first.</span>}
+          </div>
+
+          <div className="preview-panel">
+            <span className="preview-label">Live Preview — edit any question’s properties below</span>
+            <datalist id="dl-year-all">{['2019', '2020', '2021', '2022', '2023', '2024', 'Practice'].map(o => <option key={o} value={o} />)}</datalist>
+            <div className="content-feed">
+              {loaded.map((q, i) => {
+                const w = warnings[i];
+                const lbl: React.CSSProperties = { fontSize: '0.72rem', display: 'inline-flex', alignItems: 'center', gap: '0.25rem', fontWeight: 600 };
+                const ctl: React.CSSProperties = { width: 'auto', padding: '0.15rem 0.3rem', fontWeight: 400 };
+                return (
+                  <div key={i} className="admin-card-wrapper">
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center', padding: '0.5rem 0.6rem', background: 'var(--surface-2, #f1f5f9)', borderRadius: '10px', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b' }}>Q{i + 1}</span>
+                      <label style={lbl}>Inst
+                        <select className="edit-input" style={ctl} value={String(q.institution ?? '')} onChange={e => updateOne(i, 'institution', e.target.value)}>
+                          {optsWith(BULK_INSTITUTIONS, q.institution).map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </label>
+                      <label style={lbl}>Year
+                        <input className="edit-input" style={{ ...ctl, width: '72px' }} list="dl-year-all" value={String(q.year ?? '')} onChange={e => updateOne(i, 'year', e.target.value)} />
+                      </label>
+                      <label style={lbl}>Subject
+                        <select className="edit-input" style={ctl} value={String(q.subject ?? '')} onChange={e => updateOne(i, 'subject', e.target.value)}>
+                          {optsWith(BULK_SUBJECTS, q.subject).map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </label>
+                      <label style={lbl}>Type
+                        <select className="edit-input" style={ctl} value={String(q.type ?? '')} onChange={e => updateOne(i, 'type', e.target.value)}>
+                          {optsWith(BULK_TYPES, q.type).map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </label>
+                      <label style={lbl}>Topic
+                        <input className="edit-input" style={{ ...ctl, width: '120px' }} value={String(q.topic ?? '')} onChange={e => updateOne(i, 'topic', e.target.value)} />
+                      </label>
+                    </div>
+                    {w.length > 0 && <p style={{ margin: '0 0 0.4rem', fontSize: '0.75rem', color: 'var(--wrong, #dc2626)' }}>⚠ {w.join('; ')}</p>}
+                    <QuestionCard question={q} isAdmin onUpdateField={(f: keyof Question, v: any) => updateOne(i, f, v)} />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ============ Admin Dashboard (writes route through Edge Function) ============ */
 function AdminDashboard({
   questions,
@@ -1654,6 +1872,7 @@ function AdminDashboard({
   const [jsonInput, setJsonInput] = useState("");
   const [error, setError] = useState("");
   const [previewQuestions, setPreviewQuestions] = useState<Question[]>([]);
+  const [adminPage, setAdminPage] = useState<'manage' | 'upload'>('manage');
 
   const copyPrompt = async () => {
     try {
@@ -1760,6 +1979,21 @@ function AdminDashboard({
   };
 
   return (
+    <>
+      <div className="admin-topnav" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 1rem', borderBottom: '1px solid var(--border, #e2e8f0)', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button className={`btn ${adminPage === 'manage' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setAdminPage('manage')}>📋 Manage Questions</button>
+          <button className={`btn ${adminPage === 'upload' ? 'btn-primary' : 'btn-secondary'}`} onClick={() => setAdminPage('upload')}>⬆️ Bulk Upload</button>
+        </div>
+        <button className="btn btn-secondary" onClick={onExit} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.85rem' }}><I.LogOut /> Sign Out</button>
+      </div>
+      {adminPage === 'upload' ? (
+        <BulkUploadPage
+          adminCall={adminCall}
+          copyPrompt={copyPrompt}
+          onUploaded={(newQs) => onUpdate(sortQuestions([...questions, ...newQs]))}
+        />
+      ) : (
     <div className="admin-layout">
       <div className="admin-question-list-column">
         <div className="admin-header">
@@ -1769,7 +2003,6 @@ function AdminDashboard({
               Total Questions in DB: <strong>{totalCount}</strong>
             </p>
           </div>
-          <button className="btn btn-secondary" onClick={onExit} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.45rem 0.85rem' }}><I.LogOut /> Sign Out</button>
         </div>
 
         <div className="sticky-filter-section">
@@ -1980,6 +2213,8 @@ function AdminDashboard({
         </div>
       </div>
     </div>
+      )}
+    </>
   );
 }
 
