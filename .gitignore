@@ -30,3 +30,11 @@ dist-ssr
 
 # Supabase CLI cache (project ref, etc. — not for commit)
 supabase/.temp/
+
+# One-off DB audit / analysis / migration scripts and their JSON+text logs.
+# Executed as needed; kept locally only as a paper trail, not for the repo.
+_*
+*.mjs
+/mislabelled_report.json
+/qa_review_needed.json
+/sme_review_report.json
