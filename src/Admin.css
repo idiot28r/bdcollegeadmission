@@ -134,11 +134,20 @@
 }
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.2;
+  white-space: nowrap;
   cursor: pointer;
   transition: all 0.2s;
   border: none;
+  box-sizing: border-box;
 }
 
 .btn-primary {
