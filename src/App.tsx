@@ -1699,7 +1699,7 @@ function BulkUploadPage({ adminCall, onUploaded, copyPrompt }: {
       <div className="admin-section">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
           <h4 style={{ margin: 0 }}>1. Paste questions (JSON)</h4>
-          <button className="btn btn-secondary" onClick={copyPrompt} style={{ fontSize: '0.75rem', padding: '0.25rem 0.5rem' }}>📋 Copy Prompt</button>
+          <button className="btn btn-secondary" onClick={copyPrompt}>📋 Copy Prompt</button>
         </div>
         <textarea className="json-textarea" placeholder="Paste a JSON array of questions here..." value={jsonInput} onChange={e => setJsonInput(e.target.value)} style={{ width: '100%', minHeight: '180px' }} />
         {error && <p className="error-msg">{error}</p>}

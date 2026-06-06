@@ -20,7 +20,8 @@
         - "St. Joseph" or "SJS" or "SJHSS" -> "SJHSS"
     - *Coaching Centers:* If you see "UAC" or "UCC" without a specific college name, check the question style and content. If you are still unsure, do NOT default to NDC; use your best judgement based on common question patterns from these institutions.
 - `year`: "2023", "2024", or "Practice". Use "Practice" if the questions are from a general practice set rather than a specific admission year.
-- `subject`: MUST be one of: ["Physics", "Chemistry", "Math", "Biology", "English", "GK", "Bangla", "ICT", "Accounting", "Finance and Banking", "Business Ent."].
+- `subject`: MUST be one of: ["Physics", "Chemistry", "Math", "Higher Math", "Biology", "English", "GK", "Bangla", "ICT", "Accounting", "Finance and Banking", "Business Entrepreneurship", "Economics"].
+    - *"Higher Math" (উচ্চতর গণিত)* = the HSC Higher Mathematics paper; *"Math" (সাধারণ গণিত)* = general/compulsory math. Pick based on the paper's subject header — do not conflate the two.
 - `topic`: e.g. "Mechanics".
 - `question`: (MCQ only) Main question text.
 - `options`: (MCQ only) Array of 4 strings.
