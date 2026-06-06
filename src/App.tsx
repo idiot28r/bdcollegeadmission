@@ -68,6 +68,7 @@ const SUBJECT_BN: Record<string, string> = {
   Physics: 'পদার্থবিজ্ঞান',
   Chemistry: 'রসায়ন',
   Math: 'গণিত',
+  'Higher Math': 'উচ্চতর গণিত',
   Biology: 'জীববিজ্ঞান',
   English: 'ইংরেজি',
   GK: 'সাধারণ জ্ঞান',
@@ -103,6 +104,7 @@ const SUBJECT_COLORS: Record<string, string> = {
   Physics: 'var(--color-physics)',
   Chemistry: 'var(--color-chemistry)',
   Math: 'var(--color-math)',
+  'Higher Math': 'var(--color-highermath)',
   Biology: 'var(--color-biology)',
   English: 'var(--color-english)',
   GK: 'var(--color-gk)',
@@ -130,7 +132,7 @@ const GROUP_SUBJECTS: Record<Group, string[]> = {
   // The order in each array IS the display + sort order on the feed.
   // Subject names must match the DB exactly (intersected against the live
   // subject list, so a name with no rows simply won't appear in the modal).
-  science:    ['Physics', 'Chemistry', 'Biology', 'Math', 'ICT', 'Bangla', 'English', 'GK'],
+  science:    ['Physics', 'Chemistry', 'Biology', 'Math', 'Higher Math', 'ICT', 'Bangla', 'English', 'GK'],
   bst:        ['Accounting', 'Business Entrepreneurship', 'Finance and Banking', 'Math', 'ICT', 'Bangla', 'English', 'GK'],
   humanities: ['Civics', 'History', 'Geography', 'Economics', 'Math', 'ICT', 'Bangla', 'English', 'GK'],
 };
@@ -1599,7 +1601,7 @@ function QuestionCard({ question, isAdmin = false, onUpdateField, settings, isRe
 
 /* ============ Bulk Upload page (stage → summarize → normalize → insert) ============ */
 const BULK_INSTITUTIONS = ['NDC', 'HCC', 'SJHSS'];
-const BULK_SUBJECTS = ['Physics', 'Chemistry', 'Math', 'Biology', 'English', 'GK', 'Bangla', 'ICT', 'Accounting', 'Finance and Banking', 'Business Entrepreneurship', 'Economics'];
+const BULK_SUBJECTS = ['Physics', 'Chemistry', 'Math', 'Higher Math', 'Biology', 'English', 'GK', 'Bangla', 'ICT', 'Accounting', 'Finance and Banking', 'Business Entrepreneurship', 'Economics'];
 const BULK_TYPES = ['mcq', 'sq'];
 
 type MetaField = 'institution' | 'year' | 'subject' | 'type';
