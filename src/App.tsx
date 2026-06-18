@@ -773,6 +773,22 @@ function App() {
     return () => { cancelled = true; };
   }, [student?.phone, wantsAdmin, adminSession]);
 
+  // Log the student's name to their server-side row. The name arrives via the
+  // URL embed (captureStudentFromURL) but until now only the phone was stored.
+  // This is a name-only upsert keyed on student_phone, so it touches no other
+  // column — it can't clobber reads/flags/filters/group, and it back-fills the
+  // name on the next visit of any existing (name-less) student.
+  useEffect(() => {
+    const phone = student?.phone;
+    const name = student?.name?.trim();
+    const admin = wantsAdmin && !!adminSession;
+    if (admin || !phone || !name) return;
+    supabase
+      .from('student_progress')
+      .upsert({ student_phone: phone, student_name: name })
+      .then(({ error }) => { if (error) console.error('[saveName]', error); });
+  }, [student?.phone, student?.name, wantsAdmin, adminSession]);
+
   // Persist the filter selection to the student's row (debounced). Skipped
   // until restore completes so the initial empty state can't overwrite it.
   useEffect(() => {
